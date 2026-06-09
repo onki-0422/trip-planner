@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>荷兰开学前 11 天探索行程 · Neo-Classical Digital</title>
+<meta name="description" content="2026年8月20日至8月30日，基于 Uilenstede 102 的 Amsterdam、Den Haag、Rotterdam、Utrecht 与 Zaanse Schans 高交互单页行程。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg-primary:#f7f4ee;
+  --bg-secondary:#f1ede6;
+  --bg-tertiary:#fbfaf7;
+  --bg-elevated:rgba(255,255,255,.78);
+  --bg-glass:rgba(255,255,255,.62);
+  --text-primary:#1f1b17;
+  --text-secondary:#6f665d;
+  --text-tertiary:#9b9187;
+  --accent:#254c7d;
+  --accent-soft:#e8eef7;
+  --gold:#9c7b45;
+  --wine:#6d3f35;
+  --green:#3e6b53;
+  --blue:#3566a8;
+  --purple:#69558f;
+  --orange:#af6c2c;
+  --shadow-sm:0 8px 24px rgba(52,40,28,.06);
+  --shadow-md:0 16px 36px rgba(52,40,28,.1);
+  --shadow-lg:0 24px 60px rgba(52,40,28,.14);
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:22px;
+  --radius-xl:28px;
+  --separator:rgba(60,44,24,.12);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Arial",sans-serif;
+  background:radial-gradient(circle at top, #fdfbf7 0%, var(--bg-primary) 42%, var(--bg-secondary) 100%);
+  color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.55;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit}
+#map{width:100%;height:40vh;min-height:300px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(90,70,45,.08)}
+.locate-btn,.map-reset-btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border:none;box-shadow:0 1px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.locate-btn.active{color:var(--blue)}
+.tabs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:rgba(251,250,247,.8);backdrop-filter:saturate(160%) blur(18px);position:sticky;top:40vh;z-index:99;border-bottom:1px solid var(--separator);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:8px 16px;border-radius:999px;border:1px solid transparent;background:rgba(255,255,255,.7);color:var(--text-secondary);font-size:14px;font-weight:600;cursor:pointer;transition:all .25s ease;white-space:nowrap}
+.tab:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+.content{max-width:900px;margin:0 auto;padding:18px 16px calc(36px + var(--safe-bottom))}
+.hero{text-align:center;padding:30px 20px 24px}
+.hero h1,.day-head h2,.detail-title,.modal-title,.section-title-serif{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.02em}
+.hero h1{font-size:34px;line-height:1.08;font-weight:700}
+.hero .subtitle{font-size:17px;color:var(--text-secondary);margin-top:8px}
+.hero .microcopy{margin-top:14px;font-size:13px;color:var(--text-tertiary)}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.info-card,.route-bar,.card,.pay-summary,.detail-block,.mini-guide,.transit-summary{background:var(--bg-elevated);backdrop-filter:blur(18px);border:1px solid rgba(120,96,64,.08);box-shadow:var(--shadow-sm)}
+.info-card{border-radius:var(--radius-lg);padding:16px}
+.info-card .label{font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px}
+.info-card .value{font-size:15px;font-weight:600;line-height:1.45}
+.section-head{font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;padding:22px 0 10px}
+.day-head{padding:18px 0 14px}
+.day-head h2{font-size:30px;font-weight:700}
+.day-head p{font-size:15px;color:var(--text-secondary);margin-top:4px}
+.route-bar{border-radius:var(--radius-md);padding:14px 16px;margin-bottom:16px;font-size:14px;color:var(--text-secondary);line-height:1.75}
+.route-bar strong{color:var(--text-primary)}
+.day-list .card{margin-bottom:10px;cursor:pointer}
+.day-list .card .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.timeline{position:relative;padding-left:26px}.timeline::before{content:'';position:absolute;left:8px;top:20px;bottom:20px;width:1.5px;background:rgba(115,89,54,.14)}
+.tl-item{position:relative;margin-bottom:12px}
+.tl-dot{position:absolute;left:-18px;top:20px;width:10px;height:10px;border-radius:50%;z-index:1;box-shadow:0 0 0 4px var(--bg-secondary)}
+.tl-dot.food{background:var(--wine)}.tl-dot.spot{background:var(--blue)}.tl-dot.hotel{background:var(--orange)}.tl-dot.drink{background:var(--purple)}.tl-dot.transport{background:var(--text-tertiary)}
+.card{border-radius:var(--radius-md);padding:16px 18px;transition:transform .25s ease, box-shadow .25s ease;border:1px solid rgba(120,96,64,.08)}
+.card.card-clickable{cursor:pointer}
+.card.card-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card .time{font-size:12px;font-weight:700;color:var(--text-tertiary);letter-spacing:.06em;text-transform:uppercase}
+.card .name{font-size:18px;font-weight:700;margin:4px 0 6px;display:flex;align-items:center;gap:6px}
+.card .desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.badge.food{background:rgba(109,63,53,.1);color:var(--wine)}
+.badge.spot{background:rgba(53,102,168,.12);color:var(--blue)}
+.badge.drink{background:rgba(105,85,143,.12);color:var(--purple)}
+.badge.transport{background:rgba(60,60,67,.1);color:var(--text-secondary)}
+.badge.museum{background:rgba(156,123,69,.14);color:var(--gold)}
+.badge.church{background:rgba(62,107,83,.12);color:var(--green)}
+.badge.neighborhood{background:rgba(37,76,125,.09);color:var(--accent)}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.meta-pill{font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.8);color:var(--text-secondary);border:1px solid rgba(120,96,64,.08)}
+.budget{display:inline-block;margin-top:8px;padding:4px 10px;background:var(--accent-soft);border-radius:999px;font-size:12px;color:var(--accent);font-weight:600}
+.links{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:700;border:none;cursor:pointer;text-decoration:none !important;transition:transform .2s ease, filter .2s ease;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{filter:brightness(.95)}
+.btn.nav{background:var(--accent);color:#fff}
+.btn.rsv{background:var(--green);color:#fff}
+.btn.official{background:#efe5d4;color:#6d5331}
+.btn.detail{background:#f3f0eb;color:var(--text-primary)}
+.btn.operator{background:#f5f7fb;color:var(--accent)}
+.transit-summary{margin-top:12px;border-radius:14px;padding:12px 14px}
+.transit-summary h4{font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.transit-preview{display:flex;flex-direction:column;gap:6px}
+.transit-leg{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--text-secondary)}
+.transit-leg strong{color:var(--text-primary)}
+.detail-overlay{position:fixed;inset:0;background:rgba(29,24,18,.28);backdrop-filter:blur(6px);z-index:10000;opacity:0;pointer-events:none;transition:opacity .28s ease}
+.detail-overlay.show{opacity:1;pointer-events:auto}
+.detail-shell{position:absolute;inset:auto 0 0 0;height:min(84vh,900px);background:linear-gradient(180deg,rgba(252,250,246,.98),rgba(247,244,238,.98));border-radius:28px 28px 0 0;box-shadow:var(--shadow-lg);transform:translateY(100%);transition:transform .34s cubic-bezier(.22,1,.36,1);overflow:hidden;border-top:1px solid rgba(120,96,64,.12)}
+.detail-overlay.show .detail-shell{transform:translateY(0)}
+@media (min-width: 980px){
+  .detail-shell{inset:0 0 0 auto;width:min(560px,48vw);height:100vh;border-radius:28px 0 0 28px;transform:translateX(100%)}
+  .detail-overlay.show .detail-shell{transform:translateX(0)}
+}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 20px 16px;border-bottom:1px solid var(--separator);background:rgba(251,250,247,.9);backdrop-filter:blur(14px)}
+.detail-kicker{font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.detail-title{font-size:31px;line-height:1.08}
+.detail-subtitle{margin-top:6px;font-size:14px;color:var(--text-secondary)}
+.detail-close{width:38px;height:38px;border-radius:50%;border:none;background:#fff;box-shadow:var(--shadow-sm);cursor:pointer;font-size:18px}
+.detail-scroll{height:calc(100% - 90px);overflow:auto;padding:18px 20px 36px}
+.detail-block{border-radius:20px;padding:16px 16px;margin-bottom:14px}
+.detail-block h3{font-size:13px;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.detail-block p,.detail-block li{font-size:14px;color:var(--text-secondary);line-height:1.72}
+.detail-block ul{padding-left:18px}
+.highlight-grid{display:grid;gap:10px}
+.highlight-card{padding:14px;border-radius:16px;background:rgba(255,255,255,.76);border:1px solid rgba(120,96,64,.08)}
+.highlight-card h4{font-family:Georgia,"Times New Roman",serif;font-size:18px;margin-bottom:6px}
+.highlight-meta{font-size:12px;color:var(--gold);margin-bottom:8px}
+.restaurant-list{display:grid;gap:10px}
+.restaurant-item{padding:14px;border-radius:16px;background:rgba(255,255,255,.76);border:1px solid rgba(120,96,64,.08)}
+.restaurant-item h4{font-size:16px;margin-bottom:5px}
+.dish-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.dish-pill{font-size:12px;padding:4px 10px;border-radius:999px;background:#f5f1ea;color:var(--text-secondary);border:1px solid rgba(120,96,64,.08)}
+.quick-actions{display:flex;flex-wrap:wrap;gap:8px}
+.pay-summary{border-radius:18px;padding:15px 16px;font-size:13px;line-height:1.75;margin-bottom:10px}
+.pay-summary h4{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 0;font-size:12px;color:var(--text-secondary)}
+.legend-item{display:flex;align-items:center;gap:5px}.legend-dot{width:8px;height:8px;border-radius:50%}
+.leaflet-popup-content-wrapper{border-radius:16px !important;box-shadow:var(--shadow-lg) !important;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif !important}
+.leaflet-popup-content{font-size:14px !important;line-height:1.5 !important;margin:12px 14px !important}.leaflet-popup-content a{color:var(--accent) !important}
+.leaflet-popup-tip{background:#fff !important}
+.leaflet-control-zoom a{width:34px !important;height:34px !important;line-height:34px !important;font-size:16px !important;border-radius:10px !important;background:rgba(255,255,255,.85) !important;backdrop-filter:blur(10px) !important;border:.5px solid var(--separator) !important;color:var(--text-primary) !important}
+.leaflet-control-zoom{border-radius:12px !important;overflow:hidden;box-shadow:var(--shadow-md) !important;border:none !important}
+.leaflet-control-attribution{font-size:9px !important;opacity:.5}
+@media (max-width: 760px){
+  .hero h1{font-size:28px}
+  .info-grid{grid-template-columns:1fr}
+  .content{padding:14px 14px calc(28px + var(--safe-bottom))}
+  .day-head h2{font-size:26px}
+  .detail-title{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="tabs" id="tabs"></div>
+<div class="content" id="content"></div>
+<div class="detail-overlay" id="detailOverlay" aria-hidden="true">
+  <div class="detail-shell">
+    <div class="detail-top">
+      <div>
+        <div class="detail-kicker" id="detailKicker">Detail</div>
+        <div class="detail-title" id="detailTitle">Title</div>
+        <div class="detail-subtitle" id="detailSubtitle">Subtitle</div>
+      </div>
+      <button class="detail-close" onclick="closeDetail()" aria-label="关闭详情">×</button>
+    </div>
+    <div class="detail-scroll" id="detailBody"></div>
+  </div>
+</div>
+<script>
+const OFFICIALS = {
+  ns: 'https://www.ns.nl/en',
+  gvb: 'https://www.gvb.nl/en',
+  htm: 'https://www.htm.nl/en',
+  ret: 'https://www.ret.nl/en/home/',
+  uov: 'https://www.u-ov.info/'
+};
+
+const OPTIONS = {
+  regionMode: 'intl',
+  reviewMode: 'essential',
+  paymentMode: 'simple'
+};
+
+const HOTEL = {
+  name: 'Uilenstede 102, Amstelveen',
+  lat: 52.3348,
+  lng: 4.8629,
+  officialUrl: 'https://www.uilenstede.nl/'
+};
+
+const DAYS = [
+  { id: 0, label: '总览', color: '#254c7d', locations: [] },
+  {
+    id: 1,
+    label: 'D1',
+    date: '2026-08-20 Thu',
+    title: 'Museumplein 经典开场',
+    color: '#254c7d',
+    routeSummary: '以 Museumplein 为唯一主区域。上午连看 Van Gogh Museum 与 Rijksmuseum，傍晚切去 De Pijp，减少折返。',
+    dayLoop: {
+      departure: '08:35 从 Uilenstede 102 出发：步行 6 分钟到 Uilenstede 站 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → Metro 52 到 Vijzelgracht 约 8 分钟 → 步行 10 分钟到 Van Gogh Museum，全程约 31–35 分钟。',
+      ending: '20:45 左右从 De Pijp / Albert Cuyp 一带返回：步行或短接驳 tram 到 De Pijp / Vijzelgracht → Metro 52 回 Amsterdam Zuid 约 8–10 分钟 → Metro 51 回 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:20 前后到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Van Gogh Museum',
+        lat: 52.3584,
+        lng: 4.8811,
+        type: 'spot',
+        category: 'museum',
+        time: '09:30',
+        desc: '阿姆斯特丹最应该优先锁票的馆之一，适合拿它作为整段旅行的艺术开场。',
+        quickTag: '重预约馆',
+        officialUrl: 'https://www.vangoghmuseum.nl/en',
+        bookingUrl: 'https://www.vangoghmuseum.nl/en/visit/tickets',
+        gmap: 'Van Gogh Museum Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede tram/metro stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M52', from:'Amsterdam Zuid', to:'Vijzelgracht', duration:'8 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'Walk', line:'步行', from:'Vijzelgracht', to:'Van Gogh Museum', duration:'10 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro: 'Van Gogh Museum 不只是“看向日葵”的地方，它把 Vincent van Gogh 的创作轨迹、精神状态、家庭书信与 19 世纪末欧洲现代主义的转折点串成了一条非常清晰的叙事线。',
+          highlights: [
+            {
+              title:'Sunflowers',
+              meta:'Vincent van Gogh · 1889',
+              why:'这组向日葵是 Van Gogh 对色彩能量最直接的宣言。高饱和黄调既是装饰实验，也是情绪密度的视觉化。',
+              story:'它原本也带有“欢迎 Gauguin 来阿尔勒同住”的意味，背后其实是 Van Gogh 对艺术共同体的理想。'
+            },
+            {
+              title:'The Bedroom',
+              meta:'Vincent van Gogh · 1888',
+              why:'画面看似平静，实则用扭曲的透视和互补色制造一种不稳定但亲密的情绪空间。',
+              story:'这是他在阿尔勒“黄房子”生活的象征性图像，也让人看到他把私人空间变成艺术乌托邦的愿望。'
+            },
+            {
+              title:'Almond Blossom',
+              meta:'Vincent van Gogh · 1890',
+              why:'枝条与蓝天的构图明显受日本浮世绘影响，是 Van Gogh 晚期最轻盈、最有希望感的作品之一。',
+              story:'这幅作品是送给新生侄子的礼物，所以整体气质也比其他晚期作品更像祝福。'
+            },
+            {
+              title:'Self-Portraits',
+              meta:'Vincent van Gogh · 1886–1889',
+              why:'Van Gogh 的自画像不是单纯练习，而是一种用有限模特成本持续推进色彩与人格表达的实验室。',
+              story:'他频繁画自己，一部分是经济现实，一部分也是把画布当成自我诊断的表面。'
+            },
+            {
+              title:'Letters and Sketches',
+              meta:'Correspondence with Theo',
+              why:'馆中信件和速写会让你发现，Van Gogh 远比流行想象中更理性、更善于语言组织。',
+              story:'很多后来成为名作的构想，最早都在给弟弟 Theo 的信里被解释和推演。'
+            }
+          ],
+          pacing:'建议 90–120 分钟。先冲高峰作品层，再留时间给书信和生平线，理解会完整很多。'
+        }
+      },
+      {
+        name: 'Rijksmuseum',
+        lat: 52.359998,
+        lng: 4.885219,
+        type: 'spot',
+        category: 'museum',
+        time: '13:00',
+        desc: '荷兰黄金时代艺术与国家叙事的主场，规模比 Van Gogh Museum 更大，更适合挑重点看。',
+        quickTag: '国家级博物馆',
+        officialUrl: 'https://www.rijksmuseum.nl/en',
+        bookingUrl: 'https://www.rijksmuseum.nl/en/tickets',
+        gmap: 'Rijksmuseum Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Van Gogh Museum', to:'Rijksmuseum', duration:'5 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro: 'Rijksmuseum 的重点不是“尽量看完”，而是抓住 17 世纪荷兰如何把贸易、城市公民文化、宗教转型与绘画美学一起推到顶峰。',
+          highlights: [
+            {
+              title:'The Night Watch',
+              meta:'Rembrandt van Rijn · 1642',
+              why:'这不是静止的集体肖像，而是一场被瞬间截取下来的城市民兵出动场面。光线与运动感重新定义了群像画。',
+              story:'它后来被裁切过，今天看到的尺寸已经不是原貌，但仍然压得住整个馆。'
+            },
+            {
+              title:'The Milkmaid',
+              meta:'Johannes Vermeer · c.1658–1659',
+              why:'Vermeer 用极端克制的室内场景证明，日常劳动也能拥有宗教般的宁静与重量。',
+              story:'面包碎屑、墙面颗粒与光线处理让这幅小画成为“如何把平凡画得庄严”的典范。'
+            },
+            {
+              title:'The Merry Family',
+              meta:'Jan Steen · 1668',
+              why:'看似热闹欢乐，实则带有道德讽喻，是理解荷兰市民文化与家庭幽默的很好入口。',
+              story:'Jan Steen 常在混乱喜剧里埋警句，这幅就是“父母怎么做，孩子就怎么学”的视觉版。'
+            },
+            {
+              title:'The Threatened Swan',
+              meta:'Jan Asselijn · c.1650',
+              why:'一只看似孤立的天鹅，后来被读成共和政治寓言，是荷兰国家记忆如何反向书写艺术的经典例子。',
+              story:'画面上的政治指涉并非最初就有，而是后世加上的，这一点本身就很有意思。'
+            },
+            {
+              title:'Gallery of Honour',
+              meta:'Cuypers building axis',
+              why:'就算不单看某一件作品，荣誉长廊本身的空间设计也在制造“国家艺术经典”的仪式感。',
+              story:'Pierre Cuypers 的建筑把中世纪和文艺复兴语汇拼进现代博物馆框架，很适合边走边抬头。'
+            }
+          ],
+          pacing:'建议至少 2 小时。直接先走 Gallery of Honour，再决定是否补 Delftware、模型船、装饰艺术。'
+        }
+      },
+      {
+        name: 'Museumplein',
+        lat: 52.3580,
+        lng: 4.8815,
+        type: 'spot',
+        category: 'attraction',
+        time: '16:00',
+        desc: '它不仅是“馆外空地”，更是阿姆斯特丹把文化地标与城市日常连在一起的开放客厅。',
+        officialUrl: 'https://www.iamsterdam.com/en/whats-on/calendar/attractions-and-sights/overview/museumplein',
+        gmap: 'Museumplein Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Rijksmuseum', to:'Museumplein lawn', duration:'4 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Museumplein 原本是 19 世纪城市扩张后的文化轴心，随着 Rijksmuseum、Van Gogh Museum、Concertgebouw 的聚集，逐步成为阿姆斯特丹最典型的公共文化空间。',
+          architecture:'它的魅力不在单体建筑，而在“博物馆 + 草坪 + 开阔视线”的整体城市构图。周边建筑把国家文化、国际旅游和本地休闲压在一个平面里。',
+          bestWays:[
+            '在草坪上坐 20–30 分钟，让两大重馆的密度沉一沉。',
+            '天气好时从这里慢慢步行切去 De Pijp，比再上一次车更舒服。',
+            '如果临近傍晚，留意 Concertgebouw 一带的气质变化。'
+          ]
+        }
+      },
+      {
+        name: 'De Pijp Dining & Street Life',
+        lat: 52.3547,
+        lng: 4.8920,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:00',
+        desc: '与其只盯一家餐厅，不如把 De Pijp 当成第一晚最好的生活区餐饮场景。',
+        quickTag: '区域餐饮清单',
+        officialUrl: 'https://www.iamsterdam.com/en/explore/neighbourhoods/de-pijp',
+        gmap: 'De Pijp Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Museumplein', to:'De Pijp / Albert Cuyp area', duration:'14 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'De Pijp 的价值在于：你能一边看到学生、年轻白领、游客混在一起的街区生活，一边吃到比博物馆区更实在的饭。',
+          restaurantList:[
+            {
+              name:'Bazar Amsterdam',
+              cuisine:'North African / Middle Eastern',
+              price:'$$',
+              notes:'空间感和氛围都很强，适合第一晚迅速进入旅行状态。',
+              dishes:['mixed mezze', 'lamb couscous', 'mint tea']
+            },
+            {
+              name:'Sir Hummus',
+              cuisine:'Levantine',
+              price:'$',
+              notes:'更轻松，也更适合一个人快速吃一顿不出错的晚饭。',
+              dishes:['hummus with mushrooms', 'sabich', 'fresh pita']
+            },
+            {
+              name:'Wijmpje Beukers',
+              cuisine:'Dutch seafood',
+              price:'$$$',
+              notes:'如果你想认真体验本地海鲜，这家更偏正式，不是学生最省钱的选项。',
+              dishes:['oysters', 'North Sea fish special', 'shrimp croquettes']
+            },
+            {
+              name:'Coffee & Coconuts',
+              cuisine:'Cafe / brunch',
+              price:'$$',
+              notes:'更适合下午休息或第二次来，不建议当“必须打卡”的主晚餐。',
+              dishes:['banana bread', 'eggs', 'coffee']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 2,
+    label: 'D2',
+    date: '2026-08-21 Fri',
+    title: '历史中心 + Jordaan 运河区',
+    color: '#3e6b53',
+    routeSummary: '今天不拼馆数量，重心是 Anne Frank House 与 Jordaan／运河带的城市质感。',
+    dayLoop: {
+      departure: '08:20 从 Uilenstede 102 出发：步行 6 分钟到站 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS 到 Amsterdam Centraal 约 9 分钟 → Tram 13/17 到 Westermarkt 约 8 分钟 → 步行 2 分钟到 Anne Frank House，全程约 35–40 分钟。',
+      ending: '20:30 左右从 Jordaan / 晚餐区返回：步行回 Westermarkt 或 Centraal 周边 → tram 回 Amsterdam Centraal 约 8–10 分钟 → NS 到 Amsterdam Zuid 约 9 分钟 → Metro 51 到 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:20 左右到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Anne Frank House',
+        lat: 52.3752,
+        lng: 4.8839,
+        type: 'spot',
+        category: 'museum',
+        time: '09:30',
+        desc: '它的分量来自空间本身：不是“看作品”，而是进入战时隐匿与书写发生过的真实环境。',
+        quickTag: '最难抢票',
+        officialUrl: 'https://www.annefrank.org/en/',
+        bookingUrl: 'https://www.annefrank.org/en/museum/tickets/',
+        gmap: 'Anne Frank House Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Sprinter / Intercity', from:'Amsterdam Zuid', to:'Amsterdam Centraal', duration:'9 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Tram', line:'13 or 17', from:'Amsterdam Centraal', to:'Westermarkt', duration:'8 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'Walk', line:'步行', from:'Westermarkt', to:'Anne Frank House', duration:'2 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'Anne Frank House 的核心不是文学崇拜，而是把一个全球都知道的文本重新放回阿姆斯特丹占领时期的物理环境里。',
+          highlights: [
+            {
+              title:'The Secret Annex Rooms',
+              meta:'Prinsengracht 263',
+              why:'楼梯、狭小房间、采光与隔绝感会立刻把“躲藏”这件事从抽象历史变成身体经验。',
+              story:'你会意识到，这个空间最震撼的地方不在布展，而在它保留了逼仄和沉默。'
+            },
+            {
+              title:'Anne’s Original Diary Pages',
+              meta:'1942–1944',
+              why:'手稿能让“名句”重新变回一个少女在极端环境里的连续写作。',
+              story:'Anne 后来有意识地修改过部分文字，说明她并非只是在“记日记”，也在试着写成作品。'
+            },
+            {
+              title:'Otto Frank and Publication History',
+              meta:'Postwar archive',
+              why:'理解日记为何能流传至今，也能帮助你看到历史记忆如何被保存、编辑与传播。',
+              story:'Otto Frank 是家中唯一幸存者，这个事实让展览后半段的情绪很难只是“参观完毕”。'
+            }
+          ],
+          pacing:'建议 75–90 分钟，出来后不要马上赶下一个点，给自己留几分钟缓冲。'
+        }
+      },
+      {
+        name: 'Westerkerk',
+        lat: 52.3747,
+        lng: 4.8838,
+        type: 'spot',
+        category: 'church',
+        time: '11:30',
+        desc: '这座教堂与 Anne Frank House 几乎贴在一起，是运河西侧新教城市历史的重要符号。',
+        officialUrl: 'https://westerkerk.nl/',
+        gmap: 'Westerkerk Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Anne Frank House', to:'Westerkerk', duration:'1 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Westerkerk 建于 17 世纪荷兰黄金时代，属于阿姆斯特丹新教城市自信上升阶段的代表性建筑。Anne Frank 在日记里提到过教堂钟声，这让它有了额外的记忆层。',
+          architecture:'塔冠与简洁的新教内部风格都很典型。与天主教教堂相比，它的视觉语言更收敛，但在城市天际线里极有辨识度。',
+          bestWays:[
+            '和 Anne Frank House 连着看，历史感最完整。',
+            '站在运河桥边回望教堂塔冠，是最经典的视角。',
+            '如果当天人不多，可考虑短暂停留感受内部尺度。'
+          ]
+        }
+      },
+      {
+        name: 'Jordaan & Canal Walk',
+        lat: 52.3759,
+        lng: 4.8796,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '13:00',
+        desc: '与其冲更多馆，不如把下午让给 Jordaan 的街巷、桥、住宅立面和小店。',
+        officialUrl: 'https://www.iamsterdam.com/en/explore/neighbourhoods/jordaan',
+        gmap: 'Jordaan Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Westerkerk', to:'Jordaan inner streets', duration:'4 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Jordaan 最初是 17 世纪城市扩张后的工匠与移民区域，后来逐渐从工人街区转化为今天最受欢迎的高生活感片区之一。',
+          architecture:'这里的魅力在于尺度。窄宅、运河桥、拐角小广场和窗前植物，让阿姆斯特丹的住宅城市感比 Monument 更重要。',
+          bestWays:[
+            '最好的打开方式不是列点，而是慢慢走。',
+            '在桥边停下来看运河反光，比追“网红机位”更值。',
+            '下午可以顺着 Jordaan 一路滑到 Nine Streets。'
+          ]
+        }
+      },
+      {
+        name: 'Jordaan Dinner List',
+        lat: 52.3750,
+        lng: 4.8723,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:30',
+        desc: '这片区适合认真吃一次 Amsterdam 的 brown café / comfort food 氛围。',
+        officialUrl: 'https://www.iamsterdam.com/en/explore/neighbourhoods/jordaan',
+        gmap: 'Jordaan Amsterdam restaurants',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Nine Streets / Jordaan stroll', to:'Dinner area', duration:'6–12 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'Jordaan 最值得的不是找一家最火餐厅，而是选一个你愿意坐久一点的 brown café 或 neighborhood spot。',
+          restaurantList:[
+            {
+              name:'Moeders',
+              cuisine:'Dutch comfort food',
+              price:'$$',
+              notes:'想认真吃一次传统荷兰家常菜，Moeders 是比较稳的选择。',
+              dishes:['stamppot', 'beef stew', 'apple pie']
+            },
+            {
+              name:'Café Sonneveld',
+              cuisine:'Brown café / Dutch classics',
+              price:'$$',
+              notes:'氛围比“名店打卡”更重要，适合看街区傍晚。',
+              dishes:['bitterballen', 'saté', 'beer']
+            },
+            {
+              name:'Restaurant Daalder area nearby options',
+              cuisine:'Contemporary Dutch',
+              price:'$$$',
+              notes:'如果你有预算想吃更讲究的一顿，可看这类现代荷兰餐。',
+              dishes:['seasonal tasting', 'North Sea fish', 'wine pairing']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 3,
+    label: 'D3',
+    date: '2026-08-22 Sat',
+    title: 'Zaanse Schans + Amsterdam Noord',
+    color: '#af6c2c',
+    routeSummary: '早段把最天气敏感的风车村先完成，下午回到 IJ 河一侧看更当代的 Amsterdam。',
+    dayLoop: {
+      departure: '08:10 从 Uilenstede 102 出发：步行 6 分钟 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS 到 Amsterdam Centraal 约 10 分钟 → NS Sprinter 到 Zaandijk Zaanse Schans 约 17 分钟 → 步行 15 分钟到风车村，全程约 55–60 分钟。',
+      ending: '20:45 左右从 NDSM 晚餐区结束：步行回 NDSM ferry pier 约 3–8 分钟 → 免费渡轮回 Amsterdam Centraal 约 14 分钟 → NS 到 Amsterdam Zuid 约 10 分钟 → Metro 51 到 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:35 左右到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Zaanse Schans',
+        lat: 52.4731,
+        lng: 4.8177,
+        type: 'spot',
+        category: 'attraction',
+        time: '10:00',
+        desc: '这不是“纯景点复制品”，而是把风车、水利、传统工业与荷兰乡村想象浓缩在一起的开放场景。',
+        officialUrl: 'https://www.dezaanseschans.nl/en/',
+        gmap: 'Zaanse Schans',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Intercity / Sprinter', from:'Amsterdam Zuid', to:'Amsterdam Centraal', duration:'10 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'NS Train', line:'Sprinter', from:'Amsterdam Centraal', to:'Zaandijk Zaanse Schans', duration:'17 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Walk', line:'步行', from:'Zaandijk Zaanse Schans', to:'Zaanse Schans', duration:'15 min', operator:'Local', ticketUrl:OFFICIALS.ns }
+        ],
+        detailView: {
+          history:'Zaanse Schans 展示的是赞地区域与风车工业、锯木、油坊、染料与水管理的历史关系。它今天有观光属性，但背后确实扎根于荷兰工业前史。',
+          architecture:'绿色木屋、堤岸、水道、风车和工坊构成一套极其“荷兰”的视觉语法。重点不是单看风车，而是看风景如何和生产系统绑在一起。',
+          bestWays:[
+            '选晴天或多云去，风景完成度会高很多。',
+            '沿水边慢走，比每个工坊都进去更值。',
+            '如果你愿意花钱，坐一小段观景船会更容易理解整体布局。'
+          ]
+        }
+      },
+      {
+        name: 'NDSM Wharf',
+        lat: 52.4002,
+        lng: 4.8946,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '17:00',
+        desc: '从风车村回到 NDSM，会看到阿姆斯特丹另一张脸：旧工业港口、创意区与年轻城市生活。',
+        officialUrl: 'https://www.ndsm.nl/en/',
+        gmap: 'NDSM Wharf Amsterdam',
+        transit: [
+          { mode:'NS Train', line:'Sprinter', from:'Zaandijk Zaanse Schans', to:'Amsterdam Centraal', duration:'17 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Ferry', line:'NDSM ferry', from:'Amsterdam Centraal', to:'NDSM', duration:'14 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'NDSM 原本是大型造船厂区域，后来的再开发把工业遗产、艺术工作室、活动空间和餐饮组合成了今天的创意 waterfront。',
+          architecture:'这里最吸引人的不是整洁，而是大尺度厂房、空地和河岸共同制造的“自由留白感”。和中心运河区完全相反。',
+          bestWays:[
+            '坐免费渡轮本身就是体验的一部分。',
+            '傍晚沿 IJ 河边慢走，看对岸天际线。',
+            '如果天气好，找个河边位置坐一会儿比继续赶点更值。'
+          ]
+        }
+      },
+      {
+        name: 'NDSM Food List',
+        lat: 52.4006,
+        lng: 4.8941,
+        type: 'food',
+        category: 'food-hub',
+        time: '19:00',
+        desc: '这一区更适合氛围型用餐，重点是河景、空间和年轻人的晚间节奏。',
+        officialUrl: 'https://www.ndsm.nl/en/',
+        gmap: 'NDSM restaurants Amsterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'NDSM ferry pier', to:'Dinner spots', duration:'3–8 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'NDSM 吃饭不是为了“最地道荷兰菜”，而是为了看 Amsterdam 如何把工业区改造成可生活的夜晚空间。',
+          restaurantList:[
+            {
+              name:'Pllek',
+              cuisine:'Casual waterfront',
+              price:'$$',
+              notes:'河景最好，适合傍晚；热门时段人多。',
+              dishes:['burger', 'salads', 'drinks']
+            },
+            {
+              name:'Cannibale Royale du Nord',
+              cuisine:'Grill / burgers',
+              price:'$$',
+              notes:'比“只看景”更像正经晚餐。',
+              dishes:['ribs', 'burger', 'fries']
+            },
+            {
+              name:'IJ-kantine',
+              cuisine:'Cafe / lunch',
+              price:'$',
+              notes:'更适合白天或轻食，预算友好。',
+              dishes:['sandwiches', 'coffee', 'soup']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 4,
+    label: 'D4',
+    date: '2026-08-23 Sun',
+    title: 'Den Haag：王室气质与名画',
+    color: '#69558f',
+    routeSummary: '今天把 Mauritshuis 作为锚点，之后所有步行都围绕 Hofvijver、Binnenhof、Noordeinde 展开。',
+    dayLoop: {
+      departure: '08:15 从 Uilenstede 102 出发：步行 6 分钟 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS Intercity 到 Den Haag Centraal 约 49 分钟 → 步行 9 分钟到 Mauritshuis，全程约 70–75 分钟。',
+      ending: '20:30 左右从 Den Haag centrum 晚餐区返回：步行回 Den Haag Centraal 约 10–15 分钟 → NS Intercity 到 Amsterdam Zuid 约 49 分钟 → Metro 51 到 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:50 左右到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Mauritshuis',
+        lat: 52.0809,
+        lng: 4.3146,
+        type: 'spot',
+        category: 'museum',
+        time: '10:00',
+        desc: '它不像 Rijksmuseum 那样宏大，而是把几件真正高密度的荷兰与佛兰德绘画经典压在一个精致尺度里。',
+        quickTag: '小而精',
+        officialUrl: 'https://www.mauritshuis.nl/en/',
+        bookingUrl: 'https://www.mauritshuis.nl/en/plan-your-visit/tickets/',
+        gmap: 'Mauritshuis Den Haag',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Intercity', from:'Amsterdam Zuid', to:'Den Haag Centraal', duration:'49 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Walk', line:'步行', from:'Den Haag Centraal', to:'Mauritshuis', duration:'9 min', operator:'Local', ticketUrl:OFFICIALS.htm }
+        ],
+        detailView: {
+          intro:'Mauritshuis 的观看方式和大馆相反：别急着冲数量，而是让几件“你本来只在课本上见过”的作品慢慢压过来。',
+          highlights: [
+            {
+              title:'Girl with a Pearl Earring',
+              meta:'Johannes Vermeer · c.1665',
+              why:'它不是传统肖像，而更像一种特写式人物研究。光、皮肤、湿润眼神和那颗珍珠一起制造了极高的观看黏性。',
+              story:'人们常叫它“北方蒙娜丽莎”，但真正让它持久迷人的，是它始终拒绝被完整解释。'
+            },
+            {
+              title:'View of Delft',
+              meta:'Johannes Vermeer · c.1660–1661',
+              why:'城市风景在这里被画成了近乎冥想的存在。云层与水面的呼应，是荷兰城市绘画的天花板级别。',
+              story:'普鲁斯特曾极度迷恋这幅画，把它写进文学记忆，也让它成为“观看一座城市”的经典范本。'
+            },
+            {
+              title:'The Goldfinch',
+              meta:'Carel Fabritius · 1654',
+              why:'小到容易错过，却用极简构图和惊人的生命感让你停住。',
+              story:'Fabritius 是 Rembrandt 的学生，这幅画后来因小说和电影再次出圈，但它本身确实也足够强。'
+            },
+            {
+              title:'Self-Portrait',
+              meta:'Rembrandt van Rijn · 1669',
+              why:'Rembrandt 晚年的自画像几乎像把整个人生经验直接摊在脸上。',
+              story:'你会感到一种和 Rijksmuseum 完全不同的近距离压迫感。'
+            }
+          ],
+          pacing:'建议 75–100 分钟。先看 Vermeer，再回头补 Rembrandt 与小尺幅精品。'
+        }
+      },
+      {
+        name: 'Binnenhof & Hofvijver',
+        lat: 52.0796,
+        lng: 4.3112,
+        type: 'spot',
+        category: 'attraction',
+        time: '12:00',
+        desc: '这里是荷兰政治心脏，也是 Den Haag 与 Amsterdam 在气质上最不一样的地方。',
+        officialUrl: 'https://www.denhaag.com/en/binnenhof',
+        gmap: 'Binnenhof Den Haag',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Mauritshuis', to:'Binnenhof', duration:'2 min', operator:'Local', ticketUrl:OFFICIALS.htm }
+        ],
+        detailView: {
+          history:'Binnenhof 自中世纪起就是荷兰政治权力的核心场所。它让 Den Haag 与其说是“景点城市”，不如说是一座持续运作中的国家舞台。',
+          architecture:'临 Hofvijver 的视角尤其好，因为你能同时看到古老建筑群、倒影与现代国家形象的重叠。',
+          bestWays:[
+            '绕 Hofvijver 走一圈，而不是只到门口拍照。',
+            '把它和 Mauritshuis 连着看，艺术与政治的联系会很自然。',
+            '如果天气好，湖边短坐是最好的“打卡方式”。'
+          ]
+        }
+      },
+      {
+        name: 'Noordeinde & Lange Voorhout',
+        lat: 52.0797,
+        lng: 4.3045,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '14:30',
+        desc: '这是 Den Haag 最能让人感到“王室与使馆城市”气质的区域。',
+        officialUrl: 'https://www.denhaag.com/en/noordeinde',
+        gmap: 'Noordeinde Den Haag',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Binnenhof', to:'Noordeinde', duration:'10 min', operator:'Local', ticketUrl:OFFICIALS.htm }
+        ],
+        detailView: {
+          history:'Noordeinde 及其周边长期与王室、外交和上层城市生活联系在一起，所以它的“体面感”不是为游客造出来的，而是历史积累。',
+          architecture:'街面比例、树荫大道和店铺尺度都更优雅克制，没有 Amsterdam 那种挤压感。',
+          bestWays:[
+            '慢走 Denneweg、Lange Voorhout 一线。',
+            '这片区比赶去 Scheveningen 更符合这次“文化 + 生活感”的主线。',
+            '黄昏时段很适合找咖啡馆坐一会儿。'
+          ]
+        }
+      },
+      {
+        name: 'Den Haag Central Food List',
+        lat: 52.0789,
+        lng: 4.3042,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:30',
+        desc: 'Den Haag 的本地饮食乐趣，很多时候来自移民城市的真实混合。',
+        officialUrl: 'https://www.denhaag.com/en/food-drink',
+        gmap: 'Den Haag restaurants centrum',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Noordeinde area', to:'Dinner area', duration:'5–12 min', operator:'Local', ticketUrl:OFFICIALS.htm }
+        ],
+        detailView: {
+          intro:'这座城市值得吃的，不只是所谓“传统荷兰菜”，而是 Surinamese、印尼、土耳其和 café 文化怎么共同构成日常。',
+          restaurantList:[
+            {
+              name:'Warung Mini XL',
+              cuisine:'Surinamese / Javanese',
+              price:'$',
+              notes:'很适合作为学生友好型正餐。',
+              dishes:['broodje pom', 'saoto soup', 'roti']
+            },
+            {
+              name:'Dekxels',
+              cuisine:'Modern Dutch / European',
+              price:'$$$',
+              notes:'如果你想在 Den Haag 吃一顿更精致的晚餐，可以考虑。',
+              dishes:['seasonal plates', 'wine', 'chef special']
+            },
+            {
+              name:'Huppel The Pub nearby options',
+              cuisine:'Brown pub / casual',
+              price:'$$',
+              notes:'更适合不想把晚饭吃得太正式。',
+              dishes:['beer', 'bitterballen', 'pub plates']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 5,
+    label: 'D5',
+    date: '2026-08-24 Mon',
+    title: 'Rotterdam：现代建筑 + 夜住一晚',
+    color: '#6d3f35',
+    routeSummary: '今天的主逻辑是 Rotterdam 的建筑轴线与夜间街区体验，住一晚是为了把白天和夜晚连起来。',
+    dayLoop: {
+      departure: '08:35 从 Uilenstede 102 出发：步行 6 分钟 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS Intercity / Intercity Direct 到 Rotterdam Centraal 约 43–48 分钟，全程约 58–65 分钟。',
+      ending: '22:00 左右不回 Amsterdam，闭环到 Rotterdam 过夜酒店。推荐住在 Rotterdam Centraal 南侧或西南侧 5 分钟步行圈（Weena / Kruisplein / Proveniersplein 一带）。从 Witte de Withstraat 晚餐区回酒店：RET tram/metro 到 Rotterdam Centraal 或 Eendrachtsplein 接驳约 8–12 分钟，再步行 4–6 分钟到酒店；若住在 Witte de Withstraat 与 Centraal 中间，也可直接步行约 18–22 分钟回酒店。'
+    },
+    overnightStay: {
+      hotelArea: 'Rotterdam Centraal 5 分钟步行圈：Weena / Kruisplein / Proveniersplein 一带',
+      reason: '第二天早上不用再从 Amsterdam 重新南下，且能完整体验 Rotterdam 夜晚与清晨的城市气质。',
+      hotelToFirstAttraction: '08:55 从 Rotterdam Centraal 周边酒店出发：步行 4–6 分钟到 Rotterdam Centraal 或最近 RET 站 → RET metro/tram 到 Leuvehaven 一带约 10–14 分钟 → 步行 5 分钟到 Erasmusbrug，全程约 18–24 分钟。',
+      lastAttractionToHotel: '20:45–22:00 从 Witte de Withstraat 晚餐区回酒店：步行到 Eendrachtsplein / Museumpark 附近 RET 站约 4–6 分钟 → RET 1 站或 2 站回 Rotterdam Centraal 约 5–7 分钟 → 步行 4–6 分钟到酒店；或天气好时直接步行约 18–22 分钟。'
+    },
+    locations: [
+      {
+        name: 'Rotterdam Centraal',
+        lat: 51.9244,
+        lng: 4.4687,
+        type: 'transport',
+        category: 'transit',
+        time: '09:30',
+        desc: '这座车站本身就是 Rotterdam 现代城市形象的一部分，值得把它当作真正的行程节点。',
+        officialUrl: 'https://www.ret.nl/en/home/',
+        gmap: 'Rotterdam Centraal',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Intercity Direct / Intercity', from:'Amsterdam Zuid', to:'Rotterdam Centraal', duration:'43–48 min', operator:'NS', ticketUrl:OFFICIALS.ns }
+        ],
+        detailView: {
+          history:'Rotterdam 在二战轰炸后重建，城市叙事与传统老城完全不同。Centraal 车站把这种“向前看”的姿态用非常明确的建筑语言表达出来。',
+          architecture:'锐角屋顶、通透大厅和交通枢纽尺度共同构成一种非常 Rotterdam 的效率美学。',
+          bestWays:[
+            '出站后先回头看站体。',
+            '把车站视作你理解整座城市现代性的第一个注脚。',
+            '住一晚的理由之一，就是不用再急着折返 Amsterdam。'
+          ]
+        }
+      },
+      {
+        name: 'Markthal',
+        lat: 51.9207,
+        lng: 4.4865,
+        type: 'spot',
+        category: 'attraction',
+        time: '11:00',
+        desc: 'Markthal 更像是建筑体验与轻度补给站，而不是你此行最关键的餐饮目的地。',
+        officialUrl: 'https://markthal.nl/en/',
+        gmap: 'Markthal Rotterdam',
+        transit: [
+          { mode:'Metro', line:'RET Metro', from:'Rotterdam Centraal', to:'Blaak', duration:'7 min', operator:'RET', ticketUrl:OFFICIALS.ret },
+          { mode:'Walk', line:'步行', from:'Blaak', to:'Markthal', duration:'2 min', operator:'Local', ticketUrl:OFFICIALS.ret }
+        ],
+        detailView: {
+          history:'Markthal 是 Rotterdam 新城市品牌工程的一部分，把市场、住宅和建筑地标功能合在一起。',
+          architecture:'巨大拱形结构与天花壁画使它几乎像一件可以进入的公共艺术品。',
+          bestWays:[
+            '走进去抬头看穹顶，比急着买东西更重要。',
+            '把它当午间补给点，而不是本日唯一吃饭目标。',
+            '与 Cube Houses 一起看，能更清楚 Rotterdam 的实验性。'
+          ]
+        }
+      },
+      {
+        name: 'Cube Houses',
+        lat: 51.9202,
+        lng: 4.4885,
+        type: 'spot',
+        category: 'attraction',
+        time: '12:30',
+        desc: '最出圈的 Rotterdam 地标之一，但真正有趣的是它如何把“居住”这件事变成实验。',
+        officialUrl: 'https://kubuswoning.nl/informatie?lang=en',
+        gmap: 'Cube Houses Rotterdam',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Markthal', to:'Cube Houses', duration:'3 min', operator:'Local', ticketUrl:OFFICIALS.ret }
+        ],
+        detailView: {
+          history:'Piet Blom 设计这些立方屋，是为了把城市住宅理解成“抽象树木”，组合成一片可居住的“城市森林”。',
+          architecture:'倾斜立方体的核心不是造型奇观，而是它对平面居住逻辑的挑战。',
+          bestWays:[
+            '从下方仰看结构关系。',
+            '和 Oude Haven 一起看，会更理解“实验住宅 + 老港口”的 Rotterdam 拼贴感。',
+            '如果只想高效浏览，外观就足够。'
+          ]
+        }
+      },
+      {
+        name: 'Witte de Withstraat Food & Night List',
+        lat: 51.9145,
+        lng: 4.4731,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:00',
+        desc: 'Rotterdam 最容易把晚饭、散步和夜生活连成一条线的区域之一。',
+        officialUrl: 'https://www.rotterdam.info/en/locations/witte-de-withstraat/',
+        gmap: 'Witte de Withstraat Rotterdam',
+        transit: [
+          { mode:'Tram/Walk', line:'RET city center', from:'Cube Houses / Oude Haven', to:'Witte de Withstraat', duration:'14–18 min', operator:'RET', ticketUrl:OFFICIALS.ret }
+        ],
+        detailView: {
+          intro:'如果说 Amsterdam 的街区魅力是运河尺度，Rotterdam 的夜晚魅力常常就在 Witte de Withstraat 这种“年轻、杂、当代”的街面能量里。',
+          restaurantList:[
+            {
+              name:'Bazar Rotterdam',
+              cuisine:'North African / Middle Eastern',
+              price:'$$',
+              notes:'稳、热闹、适合第一晚在 Rotterdam 不想踩雷时选。',
+              dishes:['mezze', 'tagine', 'mint tea']
+            },
+            {
+              name:'Old Scuola',
+              cuisine:'Pizza / casual',
+              price:'$$',
+              notes:'更年轻化，也更轻松。',
+              dishes:['pizza', 'natural wine', 'salads']
+            },
+            {
+              name:'Warung / Turkish spots nearby',
+              cuisine:'Surinamese / Turkish',
+              price:'$',
+              notes:'如果你追求“本地真实感”而非网红感，这类选择通常更对路。',
+              dishes:['roti', 'grill plates', 'rice dishes']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 6,
+    label: 'D6',
+    date: '2026-08-25 Tue',
+    title: 'Rotterdam 半日深入 + 回 Amstelveen',
+    color: '#3566a8',
+    routeSummary: '今天只拿 Rotterdam 剩余的城市景观线，下午干净利落回 Amsterdam，不再硬塞新馆。',
+    dayLoop: {
+      departure: '08:55 从 Rotterdam Centraal 周边酒店出发：步行 4–6 分钟到 Rotterdam Centraal / RET 站 → RET metro/tram 到 Leuvehaven 一带约 10–14 分钟 → 步行 5 分钟到 Erasmusbrug，全程约 18–24 分钟。',
+      ending: '19:30 左右从 Amsterdamse Bos 边缘返回：bus/tram 回 Amsterdam Zuid 约 15–22 分钟 → Metro 51 回 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 20:05–20:20 到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Erasmusbrug',
+        lat: 51.9090,
+        lng: 4.4844,
+        type: 'spot',
+        category: 'attraction',
+        time: '09:30',
+        desc: '这座桥既是功能设施，也是 Rotterdam 当代城市身份的象征性图像。',
+        officialUrl: 'https://www.rotterdam.info/en/locations/erasmus-bridge/',
+        gmap: 'Erasmusbrug Rotterdam',
+        transit: [
+          { mode:'Metro/Tram', line:'RET city center', from:'Rotterdam overnight area', to:'Leuvehaven / bridge access', duration:'10–14 min', operator:'RET', ticketUrl:OFFICIALS.ret },
+          { mode:'Walk', line:'步行', from:'Leuvehaven', to:'Erasmusbrug', duration:'5 min', operator:'Local', ticketUrl:OFFICIALS.ret }
+        ],
+        detailView: {
+          history:'Erasmusbrug 是重建后 Rotterdam 继续向外展示当代自信的代表性基础设施。',
+          architecture:'白色斜拉桥体态非常干净，几乎像一笔划出去的现代线条。',
+          bestWays:[
+            '早上先来看桥和天际线，光线通常更好。',
+            '顺着河岸走，不要只拍一张桥照就离开。',
+            '如果你喜欢城市摄影，这里很容易出片。'
+          ]
+        }
+      },
+      {
+        name: 'Depot Boijmans Van Beuningen',
+        lat: 51.9143,
+        lng: 4.4711,
+        type: 'spot',
+        category: 'attraction',
+        time: '11:00',
+        desc: '即使不进馆，镜面“碗”形体本身也足够成为 Rotterdam 现代建筑巡礼的一站。',
+        officialUrl: 'https://www.boijmans.nl/en/depot',
+        gmap: 'Depot Boijmans Van Beuningen Rotterdam',
+        transit: [
+          { mode:'Walk/Tram', line:'RET city center', from:'Erasmusbrug', to:'Museumpark / Depot', duration:'14–18 min', operator:'RET', ticketUrl:OFFICIALS.ret }
+        ],
+        detailView: {
+          history:'Depot 是全球首批面向公众开放藏品储存系统的标志性实践之一，说明博物馆正在重写“前台 / 后台”的边界。',
+          architecture:'镜面外立面不是单纯奇观，它把周围城市、天空和树冠全吸进表面，形成极强的在场感。',
+          bestWays:[
+            '站远一点看整个体量与倒影。',
+            '如果时间紧，外观就值得来。',
+            '和前一天的 Markthal 对照，你会发现 Rotterdam 很擅长把建筑做成公众事件。'
+          ]
+        }
+      },
+      {
+        name: 'Amsterdamse Bos',
+        lat: 52.3108,
+        lng: 4.8416,
+        type: 'spot',
+        category: 'park',
+        time: '18:30',
+        desc: '从 Rotterdam 回来后，把节奏降到森林、公园与居住区，是很聪明的收尾。',
+        officialUrl: 'https://www.amsterdamsebos.nl/english/',
+        gmap: 'Amsterdamse Bos',
+        transit: [
+          { mode:'NS Train', line:'Intercity', from:'Rotterdam Centraal', to:'Amsterdam Zuid', duration:'43–48 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Bus/Walk', line:'GVB/Amstelveen local', from:'Amsterdam Zuid', to:'Amsterdamse Bos edge', duration:'15–22 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Amsterdamse Bos 虽然看起来像自然森林，其实有很强的人造景观规划背景，是 20 世纪公共休闲理念的一部分。',
+          architecture:'它的建筑意义不是单体，而是景观尺度：林地、草地、水体和慢行路径一起构成“城市边缘呼吸阀”。',
+          bestWays:[
+            '傍晚慢走最合适。',
+            '如果天气好，找草地边坐一会儿。',
+            '这比继续在 Amsterdam 市中心硬补点更符合整体节奏。'
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 7,
+    label: 'D7',
+    date: '2026-08-26 Wed',
+    title: 'Utrecht 老城 + Nijntje Museum',
+    color: '#5a4cb2',
+    routeSummary: '今天是 Utrecht 的博物馆区和运河层级空间。Nijntje Museum 是锚点，剩下时间让给 Oudegracht。',
+    dayLoop: {
+      departure: '08:40 从 Uilenstede 102 出发：步行 6 分钟 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS Intercity 到 Utrecht Centraal 约 22 分钟 → U-OV bus / 步行进 Museumkwartier 约 12–15 分钟，全程约 50–58 分钟。',
+      ending: '20:30 左右从 Oudegracht 晚餐区结束：步行或 U-OV 回 Utrecht Centraal 约 10–15 分钟 → NS Intercity 到 Amsterdam Zuid 约 22 分钟 → Metro 51 到 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:15 左右到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Nijntje Museum',
+        lat: 52.0849,
+        lng: 5.1227,
+        type: 'spot',
+        category: 'museum',
+        time: '10:00',
+        desc: '它更像一场关于 Dutch design、儿童文化与 Dick Bruna 视觉语言的温柔体验，而不是传统意义上的“名画馆”。',
+        quickTag: 'Miffy 锚点',
+        officialUrl: 'https://www.nijntjemuseum.nl/en/',
+        bookingUrl: 'https://www.nijntjemuseum.nl/en/',
+        gmap: 'Nijntje Museum Utrecht',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Uilenstede 102', to:'Uilenstede stop', duration:'6 min', operator:'Local', ticketUrl:OFFICIALS.gvb },
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Intercity', from:'Amsterdam Zuid', to:'Utrecht Centraal', duration:'22 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Bus / Walk', line:'U-OV', from:'Utrecht Centraal', to:'Museumkwartier', duration:'12–15 min', operator:'U-OV', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          intro:'如果你喜欢 Miffy，这里最有意思的地方不是“可爱”，而是你能看见 Dick Bruna 如何把极简线条、色块和儿童视角做成一种国际化的荷兰视觉语言。',
+          highlights: [
+            {
+              title:'Dick Bruna Character Design Language',
+              meta:'20th-century Dutch graphic design',
+              why:'Nijntje 的成功来自极其克制的线条、留白和颜色控制，它是 Dutch design 在全球流行文化里最温和的一张名片。',
+              story:'Bruna 的图像语言之所以持久，就是因为它足够简单，却不空。'
+            },
+            {
+              title:'Interactive Story Rooms',
+              meta:'Immersive family galleries',
+              why:'这些空间让 Nijntje 不只是平面角色，而是进入日常生活情景的叙事入口。',
+              story:'这里的重点不是“知识密度”，而是把角色和感官体验连起来。'
+            },
+            {
+              title:'Dutch Childhood Culture Context',
+              meta:'Publishing and education culture',
+              why:'你会更理解 Nijntje 为什么在荷兰不只是一只卡通兔子，而是一种童年共同语言。',
+              story:'它和 Utrecht 的关系也让这座城市多了一层柔和、设计感的身份。'
+            }
+          ],
+          pacing:'建议 60–75 分钟，适合和 Utrecht 老城慢节奏放在一起。'
+        }
+      },
+      {
+        name: 'Domkerk',
+        lat: 52.0907,
+        lng: 5.1213,
+        type: 'spot',
+        category: 'church',
+        time: '13:00',
+        desc: 'Utrecht 的宗教与城市历史核心。它让这座学生城保留了很强的纵深感。',
+        officialUrl: 'https://www.domkerk.nl/',
+        gmap: 'Domkerk Utrecht',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Nijntje Museum', to:'Domkerk', duration:'12 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          history:'Utrecht 在中世纪长期是荷兰重要的宗教中心，Domkerk 与 Dom Tower 的存在几乎定义了这座城市的历史高度。',
+          architecture:'哥特式语汇与高耸垂直性让它和 Amsterdam 的运河水平尺度形成鲜明对照。',
+          bestWays:[
+            '和广场、塔楼一起看，不要孤立看教堂立面。',
+            '如果你喜欢历史层次，这里是 Utrecht 最值得抬头的地方。',
+            '午后从这里慢慢滑向 Oudegracht 最顺。'
+          ]
+        }
+      },
+      {
+        name: 'Oudegracht',
+        lat: 52.0900,
+        lng: 5.1210,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '15:00',
+        desc: 'Utrecht 最迷人的不是单个 Monument，而是这条有层级变化的运河生活空间。',
+        officialUrl: 'https://www.discover-utrecht.com/location/oudegracht/',
+        gmap: 'Oudegracht Utrecht',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Domkerk', to:'Oudegracht', duration:'4 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          history:'Oudegracht 的独特之处在于它原本兼具防御、运输与城市商业功能，如今转化成 Utrecht 最有辨识度的公共生活场景。',
+          architecture:'它的码头层级让沿河空间不只是“岸边”，而是上下分层的人行、咖啡馆和水边平台。',
+          bestWays:[
+            '桥边停下来看两层空间关系。',
+            '找一家河边 café 坐着，比继续赶景点更值。',
+            '如果天气好，傍晚留在这里是 Utrecht 最正确的决定。'
+          ]
+        }
+      },
+      {
+        name: 'Oudegracht Dinner List',
+        lat: 52.0948,
+        lng: 5.1324,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:30',
+        desc: 'Utrecht 晚饭最舒服的策略，是在老城和运河边选一片区域，而不是盯一家网红。',
+        officialUrl: 'https://www.discover-utrecht.com/food-and-drinks/',
+        gmap: 'Utrecht Oudegracht restaurants',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Oudegracht stroll', to:'Dinner area', duration:'5–12 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          intro:'Utrecht 作为学生城市，最讨喜的是“松弛但不随便”。晚饭选择也应该服务这个节奏。',
+          restaurantList:[
+            {
+              name:'Broei',
+              cuisine:'Creative casual / cafe',
+              price:'$$',
+              notes:'轻松、友好、不会有“非得郑重其事”的压力。',
+              dishes:['seasonal lunch plates', 'coffee', 'cakes']
+            },
+            {
+              name:'LE:EN',
+              cuisine:'Asian-inspired',
+              price:'$$',
+              notes:'适合朋友同行，也适合想吃得稍微热闹一点。',
+              dishes:['small plates', 'dumplings', 'cocktails']
+            },
+            {
+              name:'Kimmade',
+              cuisine:'Vietnamese',
+              price:'$',
+              notes:'更实惠、更接地气，适合学生预算。',
+              dishes:['pho', 'summer rolls', 'rice noodles']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 8,
+    label: 'D8',
+    date: '2026-08-27 Thu',
+    title: 'Utrecht 馆补完 + 本地街区',
+    color: '#9c7b45',
+    routeSummary: '今天延续 Utrecht，但把重心从标志点切到馆与真实居住区。',
+    dayLoop: {
+      departure: '08:40 从 Uilenstede 102 出发：步行 6 分钟 → Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS Intercity 到 Utrecht Centraal 约 22 分钟 → 步行进入 Museumkwartier 约 18 分钟，全程约 53–58 分钟。',
+      ending: '20:15 左右从 Utrecht 晚餐区返回：步行 / U-OV 回 Utrecht Centraal 约 8–15 分钟 → NS Intercity 到 Amsterdam Zuid 约 22 分钟 → Metro 51 到 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 21:00–21:10 到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Centraal Museum',
+        lat: 52.0847,
+        lng: 5.1224,
+        type: 'spot',
+        category: 'museum',
+        time: '10:00',
+        desc: 'Utrecht 最稳妥的综合馆选择，适合把城市史、艺术与设计视角补齐。',
+        officialUrl: 'https://www.centraalmuseum.nl/en',
+        bookingUrl: 'https://www.centraalmuseum.nl/en/visit',
+        gmap: 'Centraal Museum Utrecht',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Utrecht Centraal / Museumkwartier approach', to:'Centraal Museum', duration:'18 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          intro:'Centraal Museum 的好处是它不会只把 Utrecht 讲成“学生城”或“老城”，而是给你一条更完整的艺术与城市文化线。',
+          highlights: [
+            {
+              title:'Rietveld and Dutch Design Context',
+              meta:'Modern design collections',
+              why:'如果你对 Dutch design 感兴趣，这里能把 Utrecht 放进更广的现代设计谱系。',
+              story:'Utrecht 与 Gerrit Rietveld 的关联，让这座城市不只属于中世纪，也属于现代主义。'
+            },
+            {
+              title:'Utrecht History Displays',
+              meta:'City collections',
+              why:'它能帮你把前一天看到的街区和宗教中心，重新放进更系统的城市历史里。',
+              story:'很多旅行者低估 Utrecht 的历史密度，这部分正好补上。'
+            },
+            {
+              title:'Fashion / Applied Arts Sections',
+              meta:'Decorative and applied arts',
+              why:'这些内容会让馆的节奏更轻，不会一直处在“看大作”的用脑模式里。',
+              story:'也是这座馆比纯美术馆更适合旅行后段的一点。'
+            }
+          ],
+          pacing:'建议 75–90 分钟，不必像 Rijksmuseum 那样拼体力。'
+        }
+      },
+      {
+        name: 'Wittevrouwen',
+        lat: 52.0968,
+        lng: 5.1308,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '16:00',
+        desc: '如果你想看 Utrecht 不是“景点版”而是“住起来的样子”，这里比继续追 Monument 更有意思。',
+        officialUrl: 'https://www.discover-utrecht.com/location/wittevrouwen/',
+        gmap: 'Wittevrouwen Utrecht',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Centraal Museum / city core', to:'Wittevrouwen', duration:'18–22 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          history:'Wittevrouwen 从城外修道区域的历史延伸，逐渐转成今天颇受欢迎的生活型街区。',
+          architecture:'尺度安静、住宅感强，没有旧城核心那么“被观看”，所以更像真实城市片段。',
+          bestWays:[
+            '别着急，慢走最重要。',
+            '如果天气好，可以把这里和 park / café 组合。',
+            '适合找未来若重返 Utrecht 也愿意再来的店。'
+          ]
+        }
+      },
+      {
+        name: 'Utrecht Easy Dinner List',
+        lat: 52.0925,
+        lng: 5.1188,
+        type: 'food',
+        category: 'food-hub',
+        time: '18:30',
+        desc: '这一天更适合轻松吃，不必再用一顿正餐把自己卡住。',
+        officialUrl: 'https://www.discover-utrecht.com/food-and-drinks/',
+        gmap: 'Utrecht casual dinner',
+        transit: [
+          { mode:'Walk / Bus', line:'U-OV', from:'Wittevrouwen', to:'Dinner area', duration:'8–15 min', operator:'U-OV', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          intro:'今天的餐饮逻辑是“轻松、顺路、好恢复”。',
+          restaurantList:[
+            {
+              name:'Dogma Hotdogbar',
+              cuisine:'Casual / quick meal',
+              price:'$',
+              notes:'不装腔，也不拖时间。',
+              dishes:['hotdogs', 'fries', 'beer']
+            },
+            {
+              name:'De Zakkendrager',
+              cuisine:'Classic Dutch / European',
+              price:'$$$',
+              notes:'如果你想在 Utrecht 吃一顿更正式的晚餐，可以考虑。',
+              dishes:['seasonal mains', 'dessert', 'wine']
+            },
+            {
+              name:'Canal-side brasserie options',
+              cuisine:'Brasserie',
+              price:'$$',
+              notes:'更适合当晚随缘挑一家气氛顺眼的店。',
+              dishes:['salads', 'fish', 'wine']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 9,
+    label: 'D9',
+    date: '2026-08-28 Fri',
+    title: 'Kasteel de Haar 可选日 / Utrecht 慢行日',
+    color: '#8b3957',
+    routeSummary: '这是体力与天气缓冲日：想补城堡就去 Kasteel de Haar，不想折腾就把 Utrecht 慢慢走完。',
+    dayLoop: {
+      departure: '09:00 从 Uilenstede 102 出发（城堡版）：Metro 51 到 Amsterdam Zuid 约 7 分钟 → NS 到 Utrecht Centraal 约 22 分钟 → U-OV regional bus 到 Kasteel de Haar 一带约 34–40 分钟 → 步行 10 分钟进城堡，全程约 80–90 分钟。若走 Utrecht 慢行版，则 09:30 左右出发即可。',
+      ending: '19:30–20:00 左右返回：若走城堡版，从 Kasteel de Haar 回 Utrecht Centraal 再接 NS 到 Amsterdam Zuid、Metro 51 回 Uilenstede，全程约 75–90 分钟；若走 Utrecht 慢行版，从 Oudegracht / cafe 区回 Utrecht Centraal 约 10–15 分钟，再按常规链路回宿舍，预计 20:45–21:10 到 Uilenstede 102。'
+    },
+    locations: [
+      {
+        name: 'Kasteel de Haar',
+        lat: 52.1216,
+        lng: 5.0386,
+        type: 'spot',
+        category: 'attraction',
+        time: '10:30',
+        desc: '如果你想补一站“童话城堡”体验，它足够漂亮；但从整体行程看，它是加分项，不是必须项。',
+        officialUrl: 'https://www.kasteeldehaar.nl/english/',
+        bookingUrl: 'https://www.kasteeldehaar.nl/english/',
+        gmap: 'Kasteel de Haar',
+        transit: [
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'NS Train', line:'Intercity', from:'Amsterdam Zuid', to:'Utrecht Centraal', duration:'22 min', operator:'NS', ticketUrl:OFFICIALS.ns },
+          { mode:'Bus', line:'U-OV regional bus', from:'Utrecht Centraal', to:'Kasteel de Haar area', duration:'34–40 min', operator:'U-OV', ticketUrl:OFFICIALS.uov },
+          { mode:'Walk', line:'步行', from:'Bus stop', to:'Castle gate', duration:'10 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          history:'De Haar 看起来像中世纪童话，但今天看到的城堡很大程度上是 19 世纪末至 20 世纪初在旧址基础上的重建与浪漫化再创造。',
+          architecture:'塔楼、护城河、花园和轴线布局都极其适合“城堡想象”的实现。',
+          bestWays:[
+            '天气好再去，花园和外观占体验很大比重。',
+            '不要只冲室内，外部轴线和护城河同样重要。',
+            '如果你已经连续跑城很累，就把它删掉，不会影响整趟旅行成立。'
+          ]
+        }
+      },
+      {
+        name: 'Oudegracht Cafe Stop',
+        lat: 52.0902,
+        lng: 5.1215,
+        type: 'drink',
+        category: 'food-hub',
+        time: '16:30',
+        desc: '如果今天不去城堡，就把时间花在运河边的慢坐上，这反而更像 Utrecht 的正确用法。',
+        officialUrl: 'https://www.discover-utrecht.com/food-and-drinks/',
+        gmap: 'Oudegracht Utrecht cafe',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Utrecht old town', to:'Canal-side cafe area', duration:'3–8 min', operator:'Local', ticketUrl:OFFICIALS.uov }
+        ],
+        detailView: {
+          intro:'今天的关键不是再塞一个“景点”，而是让体力、天气和心情接管节奏。',
+          restaurantList:[
+            {
+              name:'Canal-side cafes',
+              cuisine:'Cafe / drinks',
+              price:'$',
+              notes:'最适合今天。找一家你看着顺眼的坐下即可。',
+              dishes:['coffee', 'cake', 'beer']
+            },
+            {
+              name:'Light brasserie options',
+              cuisine:'Brasserie',
+              price:'$$',
+              notes:'如果你还想吃一顿简单正餐，可以顺手解决。',
+              dishes:['salads', 'sandwiches', 'daily specials']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 10,
+    label: 'D10',
+    date: '2026-08-29 Sat',
+    title: 'Amstelveen 生活熟悉日',
+    color: '#467f84',
+    routeSummary: '把今天彻底给生活化熟悉：Stadshart、可能的 Cobra Museum、Amsterdamse Bos，再筛出以后会复用的日常店。',
+    dayLoop: {
+      departure: '10:30 从 Uilenstede 102 出发：步行或 local tram/bus 去 Stadshart Amstelveen，约 12–18 分钟。',
+      ending: '20:00 左右从 Amstelveen 晚餐区结束：tram / 步行回 Uilenstede 102，约 10–18 分钟，预计 20:20 前回宿舍。'
+    },
+    locations: [
+      {
+        name: 'Stadshart Amstelveen',
+        lat: 52.3029,
+        lng: 4.8605,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '11:00',
+        desc: '这不是“打卡景点”，而是帮助你把旅游视角切换成真实居住视角的关键区域。',
+        officialUrl: 'https://www.stadshartamstelveen.nl/',
+        gmap: 'Stadshart Amstelveen',
+        transit: [
+          { mode:'Walk/Tram', line:'Amstelveen local', from:'Uilenstede 102', to:'Stadshart Amstelveen', duration:'12–18 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Amstelveen 并不像 Amsterdam 那样以历史 Monument 出名，它更重要的价值是作为大都会生活圈的一部分，日常性非常强。',
+          architecture:'商场、街区与住宅区的组合说明这里更偏“住起来”的城市体验。',
+          bestWays:[
+            '把这里当补给站和未来常用生活区。',
+            '顺手熟悉超市、药妆、交通站位。',
+            '今天的成功标准不是景点数量，而是降低未来生活摩擦。'
+          ]
+        }
+      },
+      {
+        name: 'Cobra Museum',
+        lat: 52.3018,
+        lng: 4.8612,
+        type: 'spot',
+        category: 'museum',
+        time: '13:30',
+        desc: '如果还想轻量看馆，这是最顺路的加分选项。',
+        officialUrl: 'https://cobra-museum.nl/en/',
+        bookingUrl: 'https://cobra-museum.nl/en/',
+        gmap: 'Cobra Museum Amstelveen',
+        transit: [
+          { mode:'Walk', line:'步行', from:'Stadshart Amstelveen', to:'Cobra Museum', duration:'3 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'Cobra 运动关注的是实验性、直觉与色彩爆发。放在旅程后段看，反而不会有大馆那种体力压力。',
+          highlights: [
+            {
+              title:'COBRA Movement Context',
+              meta:'Copenhagen–Brussels–Amsterdam',
+              why:'理解这个运动本身，比背具体作品名字更重要。',
+              story:'它在战后欧洲艺术里代表一种回到原始生命力和自由创造的冲动。'
+            },
+            {
+              title:'Karel Appel / Corneille Lines',
+              meta:'20th-century Dutch modernism',
+              why:'这些作品会让你发现荷兰艺术并不只属于黄金时代。',
+              story:'如果你前面已经看了很多古典馆，这里会形成很好的反差。'
+            },
+            {
+              title:'Experimental Color and Form',
+              meta:'Modern art vocabulary',
+              why:'看它的最好方式不是“懂不懂”，而是感受它的能量和节奏。',
+              story:'这也是为什么它适合放在轻松日。'
+            }
+          ],
+          pacing:'45–70 分钟足够。'
+        }
+      },
+      {
+        name: 'Amstelveen Everyday Food List',
+        lat: 52.3070,
+        lng: 4.8540,
+        type: 'food',
+        category: 'food-hub',
+        time: '19:00',
+        desc: '今天的晚餐目标不是“最惊艳”，而是筛出以后真的会回头吃的日常店。',
+        officialUrl: 'https://visitamstelveen.com/en/',
+        gmap: 'Amstelveen restaurants',
+        transit: [
+          { mode:'Walk / Tram', line:'Amstelveen local', from:'Amsterdamse Bos / Stadshart area', to:'Dinner area', duration:'8–15 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'学生生活开始后，真正有价值的是“复用率高”的餐厅，而不是只适合一次打卡的店。',
+          restaurantList:[
+            {
+              name:'Indonesian rijsttafel spots',
+              cuisine:'Indonesian',
+              price:'$$',
+              notes:'荷兰与印尼的历史联系，使得印尼菜在这里非常值得纳入日常。',
+              dishes:['nasi goreng', 'satay', 'rijsttafel']
+            },
+            {
+              name:'Turkish grill / doner options',
+              cuisine:'Turkish',
+              price:'$',
+              notes:'实用、便宜、下课后也容易再来。',
+              dishes:['doner', 'grill plates', 'lentil soup']
+            },
+            {
+              name:'Casual lunchrooms and cafes',
+              cuisine:'Cafe',
+              price:'$',
+              notes:'适合未来日常补咖啡或简餐。',
+              dishes:['sandwiches', 'coffee', 'soups']
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 11,
+    label: 'D11',
+    date: '2026-08-30 Sun',
+    title: 'Amsterdam 最后补漏：Vondelpark / Plantage / Oost',
+    color: '#6f665d',
+    routeSummary: '最后一天不再安排重馆，只在 Amsterdam 里选择一种最适合你收尾的城市气质。',
+    dayLoop: {
+      departure: '09:45 从 Uilenstede 102 出发：Metro 51 到 Amsterdam Zuid 约 7 分钟，再接 tram 到 Vondelpark 一带约 10–14 分钟，最后步行 3–6 分钟进公园，全程约 25–32 分钟。',
+      ending: '18:30–19:00 左右从最终 café / neighborhood 晚餐点结束：GVB tram / metro 回 Amsterdam Zuid 约 15–22 分钟 → Metro 51 回 Uilenstede 约 7 分钟 → 步行 6 分钟回 Uilenstede 102，预计 19:15–19:35 到宿舍。'
+    },
+    locations: [
+      {
+        name: 'Vondelpark',
+        lat: 52.3579,
+        lng: 4.8686,
+        type: 'spot',
+        category: 'park',
+        time: '10:30',
+        desc: '如果你想以最轻松的方式收尾，Vondelpark 是 Amsterdam 最稳的答案。',
+        officialUrl: 'https://www.amsterdam.nl/en/parks/vondelpark/',
+        gmap: 'Vondelpark Amsterdam',
+        transit: [
+          { mode:'Metro', line:'M51', from:'Uilenstede', to:'Amsterdam Zuid', duration:'7 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'Tram', line:'5 / local tram', from:'Amsterdam Zuid / Zuid area', to:'Vondelpark access', duration:'10–14 min', operator:'GVB', ticketUrl:OFFICIALS.gvb },
+          { mode:'Walk', line:'步行', from:'Stop', to:'Vondelpark', duration:'3–6 min', operator:'Local', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Vondelpark 是 19 世纪市民公共休闲理念的典型产物，也说明 Amsterdam 不只会把空间让给运河和建筑。',
+          architecture:'它的设计不是“自然原野”，而是高度控制的城市公园美学。',
+          bestWays:[
+            '坐草坪、散步、观察人，比追任何固定点都更对。',
+            '如果天气极好，这里完全可以占掉你半天。',
+            '它适合作为整趟旅行最轻的一页。'
+          ]
+        }
+      },
+      {
+        name: 'Plantage',
+        lat: 52.3663,
+        lng: 4.9120,
+        type: 'spot',
+        category: 'neighborhood',
+        time: '13:30',
+        desc: '如果你想要更安静、更有文化层次的收尾片区，Plantage 比继续挤核心区更优雅。',
+        officialUrl: 'https://www.iamsterdam.com/en/explore/neighbourhoods/plantage',
+        gmap: 'Plantage Amsterdam',
+        transit: [
+          { mode:'Tram / Metro', line:'GVB city transfer', from:'Vondelpark area', to:'Plantage', duration:'20–26 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          history:'Plantage 区长期与学术、文化机构、绿地和较宽松的城市尺度联系在一起，是 Amsterdam 里相对安静的一张面孔。',
+          architecture:'树荫、宽阔街道和机构建筑混合出一种更平缓的文化区氛围。',
+          bestWays:[
+            '适合慢走而不是赶点。',
+            '如果你前几天已经被人流耗得差不多，这里会非常舒服。',
+            '也可以临时改成 Amsterdam Oost，取决于你更想要文化感还是生活感。'
+          ]
+        }
+      },
+      {
+        name: 'Final Cafe / Neighborhood Dining',
+        lat: 52.3660,
+        lng: 4.9050,
+        type: 'food',
+        category: 'food-hub',
+        time: '16:30',
+        desc: '这顿饭的意义是选一个你愿意以后复访的 neighborhood spot，而不是最后再冲一间名店。',
+        officialUrl: 'https://www.iamsterdam.com/en/eat-and-drink',
+        gmap: 'Amsterdam neighborhood cafe',
+        transit: [
+          { mode:'Walk / Tram', line:'GVB local', from:'Plantage / Oost / Oud-West chosen area', to:'Cafe or dinner spot', duration:'5–15 min', operator:'GVB', ticketUrl:OFFICIALS.gvb }
+        ],
+        detailView: {
+          intro:'用最后一顿饭确认你更喜欢 Amsterdam 的哪种气质：草地与公园、安静文化区，还是更生活化的东区。',
+          restaurantList:[
+            {
+              name:'Oud-West cafe options',
+              cuisine:'Cafe / brunch / casual',
+              price:'$$',
+              notes:'适合想在舒服街区里慢慢坐。',
+              dishes:['coffee', 'sandwiches', 'wine']
+            },
+            {
+              name:'Amsterdam Oost neighborhood spots',
+              cuisine:'Mixed local dining',
+              price:'$–$$',
+              notes:'更生活化，也更像以后会回头去吃的区域。',
+              dishes:['middle eastern plates', 'natural wine snacks', 'casual mains']
+            },
+            {
+              name:'Plantage quiet brasserie',
+              cuisine:'Brasserie',
+              price:'$$',
+              notes:'适合把最后一天收得更安静一点。',
+              dishes:['fish', 'salads', 'dessert']
+            }
+          ]
+        }
+      }
+    ]
+  }
+];
+
+function overviewContent() {
+  return `
+  <div class="hero">
+    <h1>荷兰开学前 11 天探索行程</h1>
+    <p class="subtitle">2026/08/20–08/30 · Amsterdam / Den Haag / Rotterdam / Utrecht / Zaanse Schans</p>
+    <p class="microcopy">点开每日卡片，再点具体地点，即可进入二级详情视图：博物馆亮点、历史背景、区域餐厅清单与逐段交通都会展开。</p>
+  </div>
+  <div class="info-grid">
+    <div class="info-card"><div class="label">住宿基地</div><div class="value">Uilenstede 102, Amstelveen</div></div>
+    <div class="info-card"><div class="label">交通策略</div><div class="value">OVpay 优先；跨城以 NS Intercity / Sprinter 为主，市内接 GVB / HTM / RET / U-OV</div></div>
+    <div class="info-card"><div class="label">最强订票优先级</div><div class="value">Anne Frank House → Van Gogh Museum → Rijksmuseum → Mauritshuis</div></div>
+    <div class="info-card"><div class="label">住宿建议</div><div class="value">South Holland 组建议 Rotterdam 住 1 晚，换掉反复长通勤并体验夜晚街区气质</div></div>
+  </div>
+  <div class="section-head">行程概览</div>
+  <div class="day-list">${DAYS.slice(1).map(d => `<div class="card card-clickable" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}<br>${d.routeSummary}</div></div>`).join('')}</div>
+  <div class="section-head">订票与灵活项</div>
+  <div class="pay-summary"><h4>必须尽快订</h4><div>Anne Frank House、Van Gogh Museum、Rijksmuseum</div></div>
+  <div class="pay-summary"><h4>建议提前订</h4><div>Mauritshuis、Nijntje Museum、Centraal Museum、Kasteel de Haar、Euromast（若决定上）</div></div>
+  <div class="pay-summary"><h4>可看天气灵活安排</h4><div>Zaanse Schans、NDSM、Jordaan 散步、Wittevrouwen、Vondelpark、Amsterdamse Bos</div></div>
+  <div class="section-head">阅读方式</div>
+  <div class="mini-guide detail-block">
+    <h3>怎么用这个页面</h3>
+    <ul>
+      <li>先从上方 tabs 切到某一天。</li>
+      <li>点击单个地点卡片，打开右侧 / 底部详情页。</li>
+      <li>详情页里会出现名作清单、历史背景、推荐吃法、官方订票与交通腿链接。</li>
+      <li>地图会随每日切换；导航按钮可直接跳 Apple Maps / Google Maps / 高德。</li>
+    </ul>
+  </div>
+  <div class="section-head">图例</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--wine)"></div>餐饮区域</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>文化景点</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>喝咖啡 / 小酌</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>住宿 / 住宿策略</div>
+  </div>`;
+}
+
+const map = L.map('map', { center:[HOTEL.lat, HOTEL.lng], zoom:10, zoomControl:false, attributionControl:true });
+L.control.zoom({ position:'topright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(map);
+
+const LocateControl = L.Control.extend({
+  options:{ position:'bottomright' },
+  onAdd() {
+    const btn = L.DomUtil.create('button', 'locate-btn');
+    btn.innerHTML = '📍';
+    btn.title = '我的位置';
+    L.DomEvent.disableClickPropagation(btn);
+    btn.addEventListener('click', () => {
+      btn.classList.add('active');
+      map.locate({ setView:true, maxZoom:15 });
+    });
+    return btn;
+  }
+});
+new LocateControl().addTo(map);
+
+let locMarker, locCircle;
+map.on('locationfound', e => {
+  const r = e.accuracy / 2;
+  if (locMarker) {
+    locMarker.setLatLng(e.latlng);
+    locCircle.setLatLng(e.latlng).setRadius(r);
+  } else {
+    locMarker = L.marker(e.latlng, {
+      icon: L.divIcon({ className:'', html:'<div style="width:14px;height:14px;border-radius:50%;background:#007aff;border:2.5px solid #fff;box-shadow:0 0 6px rgba(0,122,255,.5)"></div><div class="loc-pulse" style="position:absolute;top:0;left:0"></div>', iconSize:[14,14], iconAnchor:[7,7] }),
+      zIndexOffset:2000
+    }).addTo(map);
+    locCircle = L.circle(e.latlng, { radius:r, color:'#007aff', fillColor:'#007aff', fillOpacity:.08, weight:1 }).addTo(map);
+  }
+});
+map.on('locationerror', () => {});
+
+function icon(color, emoji) {
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)">${emoji || ''}</div>`,
+    iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-16]
+  });
+}
+
+L.marker([HOTEL.lat, HOTEL.lng], { icon:icon('#af6c2c', '🏨'), zIndexOffset:1000 }).addTo(map).bindPopup(`<b>${HOTEL.name}</b>`);
+
+let markers = [], polylines = [];
+const emojis = { food:'🍽️', spot:'📍', hotel:'🏨', transport:'🚃', drink:'☕' };
+
+function clearMap() {
+  markers.forEach(m => map.removeLayer(m));
+  polylines.forEach(p => map.removeLayer(p));
+  markers = [];
+  polylines = [];
+}
+
+function mapPopupHTML(loc, dayLabel) {
+  return `<b>${loc.name}</b><br><span style="color:#86868b">${dayLabel}</span><br>${loc.desc}<br><a href="#" onclick="event.preventDefault();openDetailByName('${dayLabel}', '${loc.name.replace(/'/g, "\\'")}')">查看详情</a>`;
+}
+
+function showDay(idx) {
+  clearMap();
+  if (idx === 0) {
+    const pts = [];
+    DAYS.forEach(d => d.locations.forEach(l => { if (l.lat) pts.push([l.lat, l.lng]); }));
+    if (pts.length) map.fitBounds(pts, { padding:[30,30] });
+    DAYS.slice(1).forEach(d => {
+      d.locations.forEach(l => {
+        if (!l.lat) return;
+        const m = L.circleMarker([l.lat,l.lng], { radius:4, fillColor:d.color, color:'#fff', weight:1.5, fillOpacity:.9 })
+          .addTo(map)
+          .bindPopup(`<b>${l.name}</b><br><span style="color:#86868b">${d.label}</span>`);
+        markers.push(m);
+      });
+    });
+    return;
+  }
+  const day = DAYS.find(d => d.id === idx);
+  if (!day) return;
+  const coords = [];
+  day.locations.forEach(l => {
+    if (!l.lat) return;
+    const m = L.marker([l.lat,l.lng], { icon: icon(day.color, emojis[l.type] || '📌') }).addTo(map);
+    const q = l.gmap || encodeURIComponent(l.name + ' Netherlands');
+    m.bindPopup(`<b>${l.name}</b>${l.time ? '<br><span style="color:#86868b">' + l.time + '</span>' : ''}<br>${l.desc}<br><a href="#" onclick="event.preventDefault();openAS('${l.name.replace(/'/g, "\\'")}',${l.lat},${l.lng},'${q}')">📍 导航</a> · <a href="#" onclick="event.preventDefault();openDetail(${day.id}, '${l.name.replace(/'/g, "\\'")}')">详情</a>`);
+    markers.push(m);
+    coords.push([l.lat,l.lng]);
+  });
+  if (coords.length > 1) {
+    const pl = L.polyline(coords, { color:day.color, weight:2.5, opacity:.55, dashArray:'6,5' }).addTo(map);
+    polylines.push(pl);
+  }
+  if (coords.length) map.fitBounds(coords, { padding:[40,40], maxZoom:14 });
+}
+
+function paymentVisibility() {
+  if (OPTIONS.paymentMode === 'hidden') return false;
+  return true;
+}
+
+function normalizedPay(loc) {
+  if (loc.pay) return loc.pay;
+  if (OPTIONS.paymentMode === 'detailed') return { card: 1, cash: 0.5 };
+  if (OPTIONS.paymentMode === 'simple') return { card: 1 };
+  return null;
+}
+
+function reviewLinks(loc) {
+  if (OPTIONS.reviewMode === 'off') return [];
+  const q = encodeURIComponent(loc.name + ' ' + (loc.gmap || ''));
+  const links = [];
+  if (OPTIONS.regionMode === 'cn') {
+    if (OPTIONS.reviewMode === 'full' || OPTIONS.reviewMode === 'essential') {
+      links.push({ label:'📕 小红书', cls:'official', href:`https://www.xiaohongshu.com/search_result?keyword=${q}&source=web_explore_feed` });
+      if (loc.type === 'food' || loc.category === 'food-hub' || OPTIONS.reviewMode === 'full') {
+        links.push({ label:'🍜 大众点评', cls:'operator', href:`https://m.dianping.com/searchshop?keyword=${q}` });
+      }
+    }
+    return links;
+  }
+  if (OPTIONS.regionMode === 'intl' || OPTIONS.regionMode === 'hybrid') {
+    links.push({ label:'⭐ Google Reviews', cls:'operator', href:`https://www.google.com/maps/search/?api=1&query=${q}` });
+    if (OPTIONS.reviewMode === 'full' || loc.type === 'food' || loc.category === 'food-hub') {
+      links.push({ label:'🧭 Tripadvisor', cls:'official', href:`https://www.tripadvisor.com/Search?q=${q}` });
+    }
+    if (OPTIONS.reviewMode === 'full' && (loc.category === 'food-hub' || loc.category === 'neighborhood' || loc.type === 'drink')) {
+      links.push({ label:'💬 Reddit', cls:'detail', href:`https://www.reddit.com/search/?q=${q}` });
+      links.push({ label:'📷 Instagram', cls:'detail', href:`https://www.instagram.com/explore/tags/${encodeURIComponent(loc.name.replace(/\s+/g, ''))}/` });
+    }
+  }
+  return links;
+}
+
+function payChips(loc) {
+  if (!paymentVisibility()) return '';
+  const pay = normalizedPay(loc);
+  if (!pay) return '';
+  let h = '<div class="meta-row">';
+  const labels = OPTIONS.paymentMode === 'simple'
+    ? { card:'Card', cash:'Cash' }
+    : { cash:'现金', card:'银行卡', transitCard:'交通卡', applepay:'Apple Pay', alipay:'支付宝' };
+  for (const [k, label] of Object.entries(labels)) {
+    if (pay[k] !== undefined) h += `<span class="meta-pill">${label}</span>`;
+  }
+  return h + '</div>';
+}
+
+function categoryBadge(loc) {
+  const c = loc.category;
+  if (c === 'museum') return '<span class="badge museum">博物馆</span>';
+  if (c === 'church') return '<span class="badge church">教堂</span>';
+  if (c === 'neighborhood') return '<span class="badge neighborhood">街区</span>';
+  if (c === 'food-hub') return '<span class="badge food">餐区</span>';
+  if (c === 'transit') return '<span class="badge transport">交通</span>';
+  if (c === 'park') return '<span class="badge spot">公园</span>';
+  return loc.type === 'food' ? '<span class="badge food">餐</span>' : '<span class="badge spot">景</span>';
+}
+
+function transitPreview(loc) {
+  if (!loc.transit || !loc.transit.length) return '';
+  return `<div class="transit-summary"><h4>到达方式</h4><div class="transit-preview">${loc.transit.slice(0,3).map(leg => `<div class="transit-leg"><span><strong>${leg.mode}</strong>${leg.line && leg.line !== '步行' ? ' · ' + leg.line : ''}<br>${leg.from} → ${leg.to}</span><span>${leg.duration}</span></div>`).join('')}</div></div>`;
+}
+
+function actionButtons(loc, dayId) {
+  const q = loc.gmap || encodeURIComponent(loc.name + ' Netherlands');
+  let html = `<button class="btn nav" onclick="openAS('${loc.name.replace(/'/g, "\\'")}',${loc.lat},${loc.lng},'${q}')">📍 导航</button>`;
+  if (loc.officialUrl) html += `<a class="btn official" href="${loc.officialUrl}" target="_blank" rel="noreferrer">官网</a>`;
+  if (loc.bookingUrl) html += `<a class="btn rsv" href="${loc.bookingUrl}" target="_blank" rel="noreferrer">Book Tickets</a>`;
+  reviewLinks(loc).forEach(link => {
+    html += `<a class="btn ${link.cls}" href="${link.href}" target="_blank" rel="noreferrer">${link.label}</a>`;
+  });
+  html += `<button class="btn detail" onclick="openDetail(${dayId}, '${loc.name.replace(/'/g, "\\'")}')">查看详情</button>`;
+  return html;
+}
+
+function locCard(loc, dayId) {
+  const dot = loc.type === 'food' ? 'food' : loc.type === 'spot' ? 'spot' : loc.type === 'drink' ? 'drink' : loc.type === 'hotel' ? 'hotel' : 'transport';
+  const pills = [categoryBadge(loc)];
+  if (loc.quickTag) pills.push(`<span class="meta-pill">${loc.quickTag}</span>`);
+  if (loc.time) pills.push(`<span class="meta-pill">${loc.time}</span>`);
+  return `<div class="tl-item">
+    <div class="tl-dot ${dot}"></div>
+    <div class="card card-clickable" onclick="if(!event.target.closest('.btn,.links,a'))openDetail(${dayId}, '${loc.name.replace(/'/g, "\\'")}')">
+      <div class="time">${loc.time || '—'}</div>
+      <div class="name">${loc.name}</div>
+      <div class="desc">${loc.desc}</div>
+      <div class="meta-row">${pills.join('')}</div>
+      ${loc.budget ? `<div class="budget">${loc.budget}</div>` : ''}
+      ${payChips(loc)}
+      ${transitPreview(loc)}
+      <div class="links">${actionButtons(loc, dayId)}</div>
+    </div>
+  </div>`;
+}
+
+function renderDay(idx) {
+  const d = DAYS.find(x => x.id === idx);
+  if (!d) return '';
+  let html = `<div class="day-head"><h2>${d.title}</h2><p>${d.date}</p></div>`;
+  html += `<div class="route-bar"><strong>区域逻辑</strong>：${d.routeSummary}</div>`;
+  if (d.dayLoop) {
+    html += `<div class="route-bar"><strong>Morning Departure</strong>：${d.dayLoop.departure}<br><br><strong>Day's End</strong>：${d.dayLoop.ending}</div>`;
+  }
+  if (d.overnightStay) {
+    html += `<div class="route-bar"><strong>Overnight Stay</strong>：${d.overnightStay.hotelArea}<br><br><strong>Why this area</strong>：${d.overnightStay.reason}<br><br><strong>Hotel → First Attraction</strong>：${d.overnightStay.hotelToFirstAttraction}<br><br><strong>Last Attraction → Hotel</strong>：${d.overnightStay.lastAttractionToHotel}</div>`;
+  }
+  html += '<div class="section-head">当日节点</div><div class="timeline">';
+  d.locations.forEach(l => html += locCard(l, idx));
+  html += '</div>';
+  return html;
+}
+
+let cur = 0;
+const tabsEl = document.getElementById('tabs');
+const contentEl = document.getElementById('content');
+const detailOverlay = document.getElementById('detailOverlay');
+const detailKicker = document.getElementById('detailKicker');
+const detailTitle = document.getElementById('detailTitle');
+const detailSubtitle = document.getElementById('detailSubtitle');
+const detailBody = document.getElementById('detailBody');
+
+DAYS.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (d.id === 0 ? ' active' : '');
+  btn.dataset.day = d.id;
+  btn.textContent = d.label;
+  tabsEl.appendChild(btn);
+});
+
+function go(idx) {
+  cur = idx;
+  tabsEl.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', +t.dataset.day === idx));
+  contentEl.innerHTML = idx === 0 ? overviewContent() : renderDay(idx);
+  showDay(idx);
+  window.scrollTo({ top:0, behavior:'smooth' });
+  const tab = tabsEl.querySelector(`[data-day="${idx}"]`);
+  if (tab) tab.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+}
+
+function operatorLabel(operator) {
+  if (operator === 'NS') return 'NS';
+  if (operator === 'GVB') return 'GVB';
+  if (operator === 'HTM') return 'HTM';
+  if (operator === 'RET') return 'RET';
+  if (operator === 'U-OV') return 'U-OV';
+  return operator;
+}
+
+function findLocation(dayId, name) {
+  const day = DAYS.find(d => d.id === dayId);
+  if (!day) return null;
+  const loc = day.locations.find(l => l.name === name);
+  return loc ? { day, loc } : null;
+}
+
+function openDetail(dayId, name) {
+  const found = findLocation(dayId, name);
+  if (!found) return;
+  const { day, loc } = found;
+  detailKicker.textContent = `${day.label} · ${loc.category || loc.type}`;
+  detailTitle.textContent = loc.name;
+  detailSubtitle.textContent = `${day.title} · ${loc.time || ''}`;
+  detailBody.innerHTML = renderDetailPanel(loc, day);
+  detailOverlay.classList.add('show');
+  detailOverlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function openDetailByName(dayLabel, name) {
+  const day = DAYS.find(d => d.label === dayLabel);
+  if (day) openDetail(day.id, name);
+}
+
+function closeDetail() {
+  detailOverlay.classList.remove('show');
+  detailOverlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+detailOverlay.addEventListener('click', e => {
+  if (e.target === detailOverlay) closeDetail();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetail();
+});
+
+function renderTransitSection(loc) {
+  if (!loc.transit || !loc.transit.length) return '';
+  return `<div class="detail-block"><h3>怎么到这里</h3><div class="restaurant-list">${loc.transit.map(leg => `
+    <div class="restaurant-item">
+      <h4>${leg.mode}${leg.line && leg.line !== '步行' ? ' · ' + leg.line : ''}</h4>
+      <p>${leg.from} → ${leg.to}</p>
+      <p><strong style="color:var(--text-primary)">通勤时间：</strong>${leg.duration}</p>
+      <div class="quick-actions" style="margin-top:10px">
+        <span class="meta-pill">${operatorLabel(leg.operator)}</span>
+        ${leg.ticketUrl ? `<a class="btn operator" href="${leg.ticketUrl}" target="_blank" rel="noreferrer">Official Transit Link</a>` : ''}
+      </div>
+    </div>`).join('')}</div></div>`;
+}
+
+function renderMuseumDetails(loc) {
+  const view = loc.detailView || {};
+  return `
+    <div class="detail-block"><h3>馆的价值</h3><p>${view.intro || ''}</p></div>
+    <div class="detail-block"><h3>Must-See Highlights</h3><div class="highlight-grid">${(view.highlights || []).map(item => `
+      <div class="highlight-card">
+        <h4>${item.title}</h4>
+        <div class="highlight-meta">${item.meta || ''}</div>
+        <p><strong style="color:var(--text-primary)">为什么重要：</strong>${item.why || ''}</p>
+        <p style="margin-top:8px"><strong style="color:var(--text-primary)">背后故事：</strong>${item.story || ''}</p>
+      </div>`).join('')}</div></div>
+    ${view.pacing ? `<div class="detail-block"><h3>参观节奏</h3><p>${view.pacing}</p></div>` : ''}
+  `;
+}
+
+function renderPlaceDetails(loc) {
+  const view = loc.detailView || {};
+  return `
+    ${view.history ? `<div class="detail-block"><h3>历史背景</h3><p>${view.history}</p></div>` : ''}
+    ${view.architecture ? `<div class="detail-block"><h3>建筑 / 城市意义</h3><p>${view.architecture}</p></div>` : ''}
+    ${(view.bestWays && view.bestWays.length) ? `<div class="detail-block"><h3>最佳打开方式</h3><ul>${view.bestWays.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
+  `;
+}
+
+function renderFoodDetails(loc) {
+  const view = loc.detailView || {};
+  return `
+    ${view.intro ? `<div class="detail-block"><h3>为什么在这一区吃</h3><p>${view.intro}</p></div>` : ''}
+    ${reviewLinks(loc).length ? `<div class="detail-block"><h3>Review / Vibe Tools</h3><div class="quick-actions">${reviewLinks(loc).map(link => `<a class="btn ${link.cls}" href="${link.href}" target="_blank" rel="noreferrer">${link.label}</a>`).join('')}</div></div>` : ''}
+    <div class="detail-block"><h3>餐厅清单</h3><div class="restaurant-list">${(view.restaurantList || []).map(item => `
+      <div class="restaurant-item">
+        <h4>${item.name}</h4>
+        <p><strong style="color:var(--text-primary)">类型：</strong>${item.cuisine || ''}</p>
+        <p><strong style="color:var(--text-primary)">价格：</strong>${item.price || ''}</p>
+        <p>${item.notes || ''}</p>
+        <div class="dish-list">${(item.dishes || []).map(dish => `<span class="dish-pill">${dish}</span>`).join('')}</div>
+      </div>`).join('')}</div></div>
+  `;
+}
+
+function renderDetailPanel(loc, day) {
+  const q = loc.gmap || encodeURIComponent(loc.name + ' Netherlands');
+  let actions = `<div class="detail-block"><h3>快速操作</h3><div class="quick-actions"><button class="btn nav" onclick="openAS('${loc.name.replace(/'/g, "\\'")}',${loc.lat},${loc.lng},'${q}')">📍 导航</button>`;
+  if (loc.officialUrl) actions += `<a class="btn official" href="${loc.officialUrl}" target="_blank" rel="noreferrer">Official Site</a>`;
+  if (loc.bookingUrl) actions += `<a class="btn rsv" href="${loc.bookingUrl}" target="_blank" rel="noreferrer">Book Tickets at Official Site</a>`;
+  actions += `</div></div>`;
+
+  let blocks = `<div class="detail-block"><h3>当日位置</h3><p>${day.date} · ${day.title}</p><p style="margin-top:8px">${loc.desc}</p></div>`;
+  if (day.dayLoop) {
+    blocks += `<div class="detail-block"><h3>每日行程闭环</h3><p><strong style="color:var(--text-primary)">Morning Departure：</strong>${day.dayLoop.departure}</p><p style="margin-top:10px"><strong style="color:var(--text-primary)">Day's End：</strong>${day.dayLoop.ending}</p></div>`;
+  }
+  if (day.overnightStay) {
+    blocks += `<div class="detail-block"><h3>异地留宿衔接</h3><p><strong style="color:var(--text-primary)">Hotel Recommendation Area：</strong>${day.overnightStay.hotelArea}</p><p style="margin-top:10px"><strong style="color:var(--text-primary)">Hotel → First Attraction：</strong>${day.overnightStay.hotelToFirstAttraction}</p><p style="margin-top:10px"><strong style="color:var(--text-primary)">Last Attraction → Hotel：</strong>${day.overnightStay.lastAttractionToHotel}</p></div>`;
+  }
+  blocks += actions;
+  if (loc.category === 'museum') blocks += renderMuseumDetails(loc);
+  else if (loc.category === 'food-hub') blocks += renderFoodDetails(loc);
+  else blocks += renderPlaceDetails(loc);
+  blocks += renderTransitSection(loc);
+  return blocks;
+}
+
+tabsEl.addEventListener('click', e => {
+  const t = e.target.closest('.tab');
+  if (t) go(+t.dataset.day);
+});
+
+go(0);
+
+const asOverlay = document.createElement('div');
+asOverlay.className = 'detail-overlay';
+asOverlay.style.zIndex = '10020';
+asOverlay.innerHTML = `<div class="detail-shell" style="height:auto;max-height:none"><div class="detail-top"><div><div class="detail-kicker">导航方式</div><div class="modal-title section-title-serif" style="font-size:24px">打开地图</div><div class="detail-subtitle">选择你习惯的地图应用</div></div><button class="detail-close" onclick="closeAS()" aria-label="关闭">×</button></div><div class="detail-scroll" id="as-opts"></div></div>`;
+document.body.appendChild(asOverlay);
+asOverlay.addEventListener('click', e => { if (e.target === asOverlay) closeAS(); });
+
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+function amapAppUrl(name, lat, lng) {
+  const scheme = IS_IOS ? 'iosamap' : 'androidamap';
+  return `${scheme}://viewMap?sourceApplication=trip&poiname=${encodeURIComponent(name)}&lat=${lat}&lon=${lng}&dev=0`;
+}
+function amapWebUrl(name, lat, lng) {
+  return `https://uri.amap.com/marker?position=${lng},${lat}&name=${encodeURIComponent(name)}&src=trip&coordinate=wgs84&callnative=1`;
+}
+function openAmap(name, lat, lng) {
+  window.open(amapWebUrl(name, lat, lng));
+}
+function openAS(name, lat, lng, gmap) {
+  const q = gmap || encodeURIComponent(name + ' Netherlands');
+  const encName = encodeURIComponent(name);
+  const safeName = name.replace(/'/g, "\\'");
+  const appleUrl = `https://maps.apple.com/?q=${lat},${lng}&ll=${lat},${lng}&name=${encName}`;
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  let buttons = `<a class="btn official" href="${appleUrl}" target="_blank" rel="noreferrer">🍎 Apple Maps</a><a class="btn nav" href="${googleUrl}" target="_blank" rel="noreferrer">🗺️ Google Maps</a>`;
+  if (OPTIONS.regionMode === 'cn' || OPTIONS.regionMode === 'hybrid') {
+    buttons += `<button class="btn operator" onclick="openAmap('${safeName}',${lat},${lng});closeAS()">🧭 高德地图</button>`;
+  }
+  document.getElementById('as-opts').innerHTML = `
+    <div class="detail-block"><h3>地图选择</h3><div class="quick-actions">${buttons}</div></div>`;
+  asOverlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeAS() {
+  asOverlay.classList.remove('show');
+  if (!detailOverlay.classList.contains('show')) document.body.style.overflow = '';
+}
+</script>
+</body>
+</html>
